@@ -8,7 +8,7 @@ pub struct Key<'a, F, T: Clone> where F: Lens<T>{
     state_id: StateID,
 }
 
-impl<'a, T: Clone + 'static> Key<'a, Empty, T> {
+impl<'a, T: Clone + Send + Sync + 'static> Key<'a, Empty, T> {
     pub fn new(state: &'a mut State<T>) -> Self {
         let id = state.id();
         Key {
@@ -20,9 +20,9 @@ impl<'a, T: Clone + 'static> Key<'a, Empty, T> {
 }
 
 impl<'a, F: Lens<T>, T: Clone + 'static> Key<'a, F, T> {
-    pub fn update<G: FnOnce(&mut T) + Send>(&self, updater: G) {
+    pub fn update<G: FnOnce(&mut T) + Send + Sync + 'static>(&self, updater: G) {
         let f = self.lens.clone();
-        update_state(self.state_id, |value|f.lens_mut(value, updater));
+        update_state(self.state_id, move|value|f.lens_mut(value, updater));
     }
 
     pub fn with_lens<U: Clone, R, G: Lens<U, Source = T>>

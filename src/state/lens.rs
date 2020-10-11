@@ -1,4 +1,4 @@
-pub trait Lens<T>: Clone {
+pub trait Lens<T>: Clone + Send + Sync + 'static {
     type Source: 'static;
 
     fn lens<R>(&self, value: &Self::Source, f: impl FnOnce(&T) -> R) -> R;

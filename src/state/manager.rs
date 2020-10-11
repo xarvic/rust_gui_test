@@ -1,20 +1,23 @@
 use std::any::Any;
-use crate::state::{StateID, StateHandle};
-use std::sync::mpsc::{Receiver, SyncSender, sync_channel};
+use crate::state::{StateID, Handle};
 use once_cell::sync::Lazy;
-use std::thread::spawn;
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::collections::{VecDeque, HashMap};
 use std::sync::Mutex;
 
-pub(crate) fn update_state<T: 'static, F: FnOnce(&mut T)>(id: StateID, update: F) {
-    let _update = |value: &mut dyn Any|{
+pub(crate) fn update_state<T: 'static, F: FnOnce(&mut T) + Send + Sync + 'static>(id: StateID, update: F) {
+    let update = move|value: &mut dyn Any|{
         if let Some(value) = value.downcast_mut::<T>() {
             update(value);
         } else {
             eprintln!("update closure for State({}) with a wrong type was provided!", {id.0});
         }
     };
+    let mut guard = MANAGER.lock().unwrap();
+
+    CHANGED.store(true, Ordering::SeqCst);
+
+    guard.updates.push_back((id, Box::new(update)));
 }
 
 /// applies all changes to the States which were created by Key::update
@@ -25,17 +28,18 @@ pub fn sync_states() {
 
         while let Some((id, update)) = manager.updates.pop_front() {
             if let Some(state) = manager.states.get(&id) {
-                update
+                state.0.update(update);
             }
         }
+        CHANGED.store(false, Ordering::SeqCst);
     }
 }
 
-type StateUpdate = (StateID, Box<dyn Fn(&mut dyn Any) + Send>);
+type StateUpdate = (StateID, Box<dyn FnOnce(&mut dyn Any) + Send>);
 
 struct Manager{
     updates: VecDeque<StateUpdate>,
-    states: HashMap<StateID, StateHandle>,
+    states: HashMap<StateID, Handle>,
 }
 
 impl Manager{

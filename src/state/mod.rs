@@ -11,7 +11,7 @@ pub(crate) use manager::update_state;
 use std::any::Any;
 
 
-#[derive(Copy, Clone)]
+#[derive(Copy, Clone, Hash, Ord, PartialOrd, PartialEq, Eq)]
 pub struct StateID(u64);
 
 pub(crate) struct StateInner<T> {
@@ -46,7 +46,7 @@ pub struct State<T: Clone> {
     inner: Arc<StateInner<T>>,
 }
 
-impl<T: Clone> State<T> {
+impl<T: 'static + Clone + Send + Sync> State<T> {
     pub fn new(value: T) -> Self {
         State{
             cache: value.clone(),
@@ -66,19 +66,25 @@ impl<T: Clone> State<T> {
     pub fn id(&self) -> StateID {
         self.inner.id()
     }
+
+    pub fn handle(&self) -> Handle {
+        Handle(self.inner.clone() as Arc<dyn HandleInner + Send + Sync>)
+    }
 }
 
-trait StateUpdate{
-    fn update(&self, updater: Box<dyn Fn(&mut dyn Any)>);
+pub(crate) trait HandleInner {
+    fn update(&self, updater: Box<dyn FnOnce(&mut dyn Any)>);
     fn id(&self) -> StateID;
 }
 
-impl<T: Clone> StateUpdate for State<T> {
-    fn update(&self, updater: Box<dyn Fn(&mut dyn Any)>) {
-        unimplemented!()
+impl<T: 'static + Clone> HandleInner for StateInner<T> {
+    fn update(&self, updater: Box<dyn FnOnce(&mut dyn Any)>) {
+        updater(&mut*self.value.write().unwrap());
     }
 
     fn id(&self) -> StateID {
-        unimplemented!()
+        self.id
     }
 }
+
+pub struct Handle(pub(crate) Arc<dyn HandleInner + Send + Sync>);
