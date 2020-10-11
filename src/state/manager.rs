@@ -16,7 +16,7 @@ pub(crate) fn update_state<T: 'static, F: FnOnce(&mut T) + Send + Sync + 'static
     let mut guard = MANAGER.lock().unwrap();
 
     CHANGED.store(true, Ordering::SeqCst);
-
+    println!("push update!");
     guard.updates.push_back((id, Box::new(update)));
 }
 
@@ -27,8 +27,11 @@ pub fn sync_states() {
         let mut manager = MANAGER.lock().unwrap();
 
         while let Some((id, update)) = manager.updates.pop_front() {
+            println!("sync!");
             if let Some(state) = manager.states.get(&id) {
                 state.0.update(update);
+            } else {
+                eprintln!("Updating nonexisting State {}!", id.0);
             }
         }
         CHANGED.store(false, Ordering::SeqCst);
@@ -37,9 +40,9 @@ pub fn sync_states() {
 
 type StateUpdate = (StateID, Box<dyn FnOnce(&mut dyn Any) + Send>);
 
-struct Manager{
-    updates: VecDeque<StateUpdate>,
-    states: HashMap<StateID, Handle>,
+pub(crate) struct Manager{
+    pub(crate) updates: VecDeque<StateUpdate>,
+    pub(crate) states: HashMap<StateID, Handle>,
 }
 
 impl Manager{
@@ -53,4 +56,4 @@ impl Manager{
 
 static CHANGED: AtomicBool = AtomicBool::new(false);
 
-static MANAGER: Lazy<Mutex<Manager>> = Lazy::new(||Mutex::new(Manager::new()));
+pub(crate) static MANAGER: Lazy<Mutex<Manager>> = Lazy::new(||Mutex::new(Manager::new()));

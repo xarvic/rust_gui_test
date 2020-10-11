@@ -9,6 +9,7 @@ mod manager;
 pub use manager::sync_states;
 pub(crate) use manager::update_state;
 use std::any::Any;
+use crate::state::manager::MANAGER;
 
 
 #[derive(Copy, Clone, Hash, Ord, PartialOrd, PartialEq, Eq)]
@@ -20,10 +21,18 @@ pub(crate) struct StateInner<T> {
     value: RwLock<T>,
 }
 
+fn next() -> StateID {
+    static ID: AtomicU64 = AtomicU64::new(0);
+    let value = ID.load(Ordering::SeqCst);
+    ID.compare_and_swap(value, value + 1, Ordering::SeqCst);
+    StateID(value)
+}
+
 impl<T: Clone> StateInner<T> {
     fn new(value: T) -> Self {
+        let id = next();
         StateInner{
-            id: StateID(0),//TODO: implement global counter
+            id,
             commit: AtomicU64::new(0),
             value: RwLock::new(value),
         }
@@ -32,7 +41,7 @@ impl<T: Clone> StateInner<T> {
         self.id
     }
     fn commit(&self) -> u64 {
-        self.commit.load(Ordering::Relaxed)
+        self.commit.load(Ordering::SeqCst)
     }
     fn fetch_value(&self, value: &mut T) {
         value.clone_from(self.value.read().unwrap().deref());
@@ -48,11 +57,13 @@ pub struct State<T: Clone> {
 
 impl<T: 'static + Clone + Send + Sync> State<T> {
     pub fn new(value: T) -> Self {
-        State{
+        let state = State{
             cache: value.clone(),
             commit: 0,
             inner: Arc::new(StateInner::new(value)),
-        }
+        };
+        MANAGER.lock().unwrap().states.insert(state.id(), state.handle());
+        state
     }
 
     pub fn fetch(&mut self) -> &T {
@@ -80,6 +91,7 @@ pub(crate) trait HandleInner {
 impl<T: 'static + Clone> HandleInner for StateInner<T> {
     fn update(&self, updater: Box<dyn FnOnce(&mut dyn Any)>) {
         updater(&mut*self.value.write().unwrap());
+        self.commit.store(self.commit.load(Ordering::SeqCst) + 1, Ordering::SeqCst);
     }
 
     fn id(&self) -> StateID {
