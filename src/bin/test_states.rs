@@ -6,10 +6,8 @@ fn main() {
 
     let key = Key::new(&mut state1);
 
-    key.update(|data|*data += 1);
 
     sync_states();
 
-    println!("state: {}", *state1.fetch())
-
+    println!("state: {}", *state1.fetch());
 }

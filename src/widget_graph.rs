@@ -1,10 +1,10 @@
 use pool_tree::tree::Tree;
 use std::collections::HashMap;
 use crate::state::StateID;
-use crate::widgets::StateWidget;
 use druid_shell::kurbo::{Point, Size, Rect};
 use crate::event::Event;
 use druid_shell::piet::Piet;
+use crate::widgets::state::StateWidget;
 
 pub struct StateRoot {
     widgets: Box<dyn StateWidget>,

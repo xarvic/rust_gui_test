@@ -38,4 +38,3 @@ impl<A, B, T> Lens<T> for Product<A, B> where A: Lens<B::Source>, B: Lens<T> {
         self.0.lens_mut(value, |u|self.1.lens_mut(u, f))
     }
 }
-
