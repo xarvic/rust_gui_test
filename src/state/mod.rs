@@ -7,13 +7,20 @@ pub mod lens;
 
 mod manager;
 pub use manager::sync_states;
-pub(crate) use manager::update_state;
 use std::any::Any;
 use crate::state::manager::MANAGER;
+use druid_shell::Counter;
 
 
 #[derive(Copy, Clone, Hash, Ord, PartialOrd, PartialEq, Eq)]
 pub struct StateID(u64);
+
+impl StateID{
+    pub fn new() -> Self {
+        static IDS: Counter = Counter::new();
+        StateID(IDS.next())
+    }
+}
 
 pub(crate) struct StateInner<T> {
     id: StateID,
@@ -21,18 +28,14 @@ pub(crate) struct StateInner<T> {
     value: RwLock<T>,
 }
 
-fn next() -> StateID {
-    static ID: AtomicU64 = AtomicU64::new(0);
-    let value = ID.load(Ordering::SeqCst);
-    ID.compare_and_swap(value, value + 1, Ordering::SeqCst);
-    StateID(value)
-}
+
 
 impl<T: Clone> StateInner<T> {
     fn new(value: T) -> Self {
-        let id = next();
+
+
         StateInner{
-            id,
+            id: StateID::new(),
             commit: AtomicU64::new(0),
             value: RwLock::new(value),
         }
@@ -74,6 +77,10 @@ impl<T: 'static + Clone + Send + Sync> State<T> {
         }
         &self.cache
     }
+    pub fn read(&self) -> &T {
+        &self.cache
+    }
+
     pub fn id(&self) -> StateID {
         self.inner.id()
     }

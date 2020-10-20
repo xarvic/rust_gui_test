@@ -1,7 +1,5 @@
-use crate::state::{StateID, State, update_state};
-use crate::state::lens::{Lens, Empty, Product};
+use crate::state::{StateID, State};
 
-#[derive(Clone)]
 pub struct Key<'a, T: Clone> {
     value: &'a T,
     state_id: StateID,
@@ -13,6 +11,13 @@ impl<'a, T: Clone + Send + Sync + 'static> Key<'a, T> {
         Key {
             value: state.fetch(),
             state_id: id
+        }
+    }
+
+    pub fn borrow(&mut self) -> Key<T> {
+        Key {
+            value: self.value,
+            state_id: self.state_id,
         }
     }
 }

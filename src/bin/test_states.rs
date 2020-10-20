@@ -4,7 +4,8 @@ use gui::state::key::Key;
 fn main() {
     let mut state1 = State::new(0);
 
-    let key = Key::new(&mut state1);
+    let _key = Key::new(&mut state1);
+
 
 
     sync_states();
