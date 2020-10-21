@@ -62,8 +62,6 @@ impl<T: Clone, L: Layout> Container<T, L> where L::Constrain: Default {
 
 impl<T: Clone + 'static, L: Layout> Widget<T> for Container<T, L> {
     fn draw(&mut self, painter: &mut Piet, size: Size, dirty_rect: Rect, context: WidgetContext, data: &T) {
-        let brush = painter.solid_brush(Color::rgb8(185, 0, 0));
-        painter.stroke(Rect::new(1.0, 1.0, size.width - 1.0, size.height - 1.0), &brush, 2.0);
         for (child, meta) in self.widgets.iter_mut() {
             painter.with_save(|painter|{
                 painter.transform(Affine::translate(meta.offset));
