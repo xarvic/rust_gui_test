@@ -10,7 +10,7 @@ pub use container::Container;
 use druid_shell::kurbo::{Size, Vec2, Rect, Affine};
 use crate::widgets::Widget;
 use crate::widget_graph::WidgetContext;
-use crate::event::Event;
+use crate::event::{Event, EventResponse};
 use druid_shell::piet::{Piet, RenderContext};
 use crate::state::key::Key;
 
@@ -199,9 +199,11 @@ impl<T: Clone, W: Widget<T>> Widget<T> for Padding<W> {
         painter.transform(Affine::translate(-self.1.to_vec2()));
     }
 
-    fn handle_event(&mut self, mut event: Event, context: WidgetContext, data: Key<T>) {
+    fn handle_event(&mut self, mut event: Event, context: WidgetContext, data: Key<T>) -> EventResponse{
         if event.shift(self.1.to_vec2()) {
             self.0.handle_event(event, context, data)
+        } else {
+            EventResponse::Valid
         }
     }
 

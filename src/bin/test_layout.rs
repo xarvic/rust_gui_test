@@ -3,7 +3,7 @@ use gui::widgets::{Widget, PrefSize, Label};
 use druid_shell::piet::{Color, Piet, RenderContext};
 use druid_shell::kurbo::{Rect, Size};
 use gui::widget_graph::WidgetContext;
-use gui::event::Event;
+use gui::event::{Event, EventResponse, click_listener, Change};
 use gui::state::key::Key;
 use gui::widgets::layout::{HBox, Container, Spacing, VBox, padding};
 
@@ -15,24 +15,8 @@ impl Widget<u32> for ColorRect {
         painter.stroke(Rect::new(5.0, 5.0, size.width - 5.0, size.height - 5.0), &brush, 10.0);
     }
 
-    fn handle_event(&mut self, event: Event, _context: WidgetContext, _data: Key<u32>) {
-        match event {
-            Event::MouseEnter(_) => {
-                println!("enter!");
-            }
-            Event::MouseDown(_) => {
-                self.1 = true;
-            }
-            Event::MouseUp(_) => {
-                self.1 = false;
-                println!("clicked!");
-            }
-            Event::MouseExit => {
-                self.1 = false;
-                println!("exit!");
-            }
-            _ => {}
-        }
+    fn handle_event(&mut self, event: Event, _context: WidgetContext, _data: Key<u32>) -> EventResponse{
+        EventResponse::Valid
     }
 
     fn get_pref_size(&mut self, _context: WidgetContext, _data: &u32) -> PrefSize {
@@ -47,7 +31,8 @@ impl Widget<u32> for ColorRect {
 fn test_layout(spacing: Spacing) -> impl Widget<u32> {
     Container::new(HBox::new(spacing, 0.0))
         .child(ColorRect(Color::rgb8(244, 80, 0), false))
-        .child(ColorRect(Color::rgb8(244, 244, 0), false))
+        .child(click_listener(ColorRect(Color::rgb8(244, 244, 0), false),
+            |_, _|println!("clicked!")))
         .child(ColorRect(Color::rgb8(0, 244, 100), false))
         .child(ColorRect(Color::rgb8(100, 0, 240), false))
 }

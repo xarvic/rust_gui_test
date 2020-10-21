@@ -1,6 +1,6 @@
 use crate::widgets::layout::{WidgetList, ChildMeta, Layout};
 use crate::widgets::{Widget, PrefSize};
-use crate::event::Event;
+use crate::event::{Event, EventResponse};
 use crate::widget_graph::WidgetContext;
 use crate::state::key::Key;
 use druid_shell::kurbo::{Size, Affine, Rect};
@@ -73,7 +73,9 @@ impl<T: Clone + 'static, L: Layout> Widget<T> for Container<T, L> {
         }
     }
 
-    fn handle_event(&mut self, mut event: Event, context: WidgetContext, mut data: Key<T>) {
+    fn handle_event(&mut self, mut event: Event, context: WidgetContext, mut data: Key<T>) -> EventResponse{
+        let mut respone = EventResponse::Valid;
+
         if let Some(me) = event.mouse_event() {
             let mut consumer = None;
             for (index, (child, meta)) in self.widgets.iter().enumerate() {
@@ -84,7 +86,7 @@ impl<T: Clone + 'static, L: Layout> Widget<T> for Container<T, L> {
 
             //Exit old widget
             if let Some(old) = self.mouse_focus {
-                if consumer.unwrap_or(old + 1) != old {
+                if consumer != Some(old) {
                     self.widgets[old as usize].0.handle_event(Event::MouseExit, context.id(), data.id());
                 }
             }
@@ -94,8 +96,8 @@ impl<T: Clone + 'static, L: Layout> Widget<T> for Container<T, L> {
                 let mut child_event = me.clone();
                 child_event.pos -= meta.offset;
 
-                if self.mouse_focus.unwrap_or(new + 1) != new {
-                    child.handle_event(Event::MouseEnter(child_event.clone()), context.id(), data.id());
+                if self.mouse_focus != Some(new) {
+                    respone.merge(child.handle_event(Event::MouseEnter(child_event.clone()), context.id(), data.id()));
                 }
                 if let Event::MouseEnter(_) = event {
                     //Do nothing (already done)!
@@ -109,6 +111,7 @@ impl<T: Clone + 'static, L: Layout> Widget<T> for Container<T, L> {
 
         }
 
+        respone
     }
 
     fn get_pref_size(&mut self, context: WidgetContext, data: &T) -> PrefSize {

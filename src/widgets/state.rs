@@ -1,5 +1,5 @@
 use crate::state::{StateID, State};
-use crate::event::Event;
+use crate::event::{Event, EventResponse};
 use druid_shell::piet::Piet;
 use crate::widgets::Widget;
 use druid_shell::kurbo::{Size, Rect};
@@ -31,7 +31,7 @@ impl<T: Clone> Widget<T> for StateWrapper {
         unimplemented!()
     }
 
-    fn handle_event(&mut self, event: Event, context: WidgetContext, data: Key<T>) {
+    fn handle_event(&mut self, event: Event, context: WidgetContext, data: Key<T>) -> EventResponse {
         unimplemented!()
     }
 

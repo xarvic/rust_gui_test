@@ -1,7 +1,7 @@
 use crate::widgets::{Widget, PrefSize};
 use druid_shell::kurbo::{Rect, Size};
 use crate::widget_graph::WidgetContext;
-use crate::event::Event;
+use crate::event::{Event, EventResponse};
 use druid_shell::piet::{Piet, RenderContext, PietTextLayout, FontBuilder, Text, TextLayout, Color, TextLayoutBuilder};
 use crate::state::key::Key;
 
@@ -29,8 +29,8 @@ impl<T: Clone> Widget<T> for Label {
         painter.draw_text(self.layout.as_ref().unwrap(), (0.0, 20.0), &brush);
     }
 
-    fn handle_event(&mut self, event: Event, context: WidgetContext, data: Key<T>) {
-
+    fn handle_event(&mut self, event: Event, context: WidgetContext, data: Key<T>) -> EventResponse{
+        EventResponse::Valid
     }
 
     fn get_pref_size(&mut self, context: WidgetContext, data: &T) -> PrefSize {
