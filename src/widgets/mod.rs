@@ -11,6 +11,7 @@ pub mod lens;
 mod text;
 
 pub use text::Label;
+pub use layout::PrefSize;
 
 pub trait Widget<T: Clone> {
     fn draw(&mut self, painter: &mut Piet, size: Size, dirty_rect: Rect, context: WidgetContext, data: &T);
@@ -42,64 +43,6 @@ impl<T: Clone> Widget<T> for Empty{
     fn build(&mut self, context: WidgetContext) {}
 
     fn traverse_focus(&mut self, context: WidgetContext) -> bool { false }
-}
-
-#[derive(Copy, Clone, PartialEq)]
-pub struct PrefSize {
-    min: Size,
-    max: Size,
-    grow: Vec2,
-}
-
-impl PrefSize {
-    pub fn fixed(size: Size) -> Self {
-        PrefSize{
-            min: size,
-            max: size,
-            grow: Vec2::ZERO
-        }
-    }
-    pub fn min_max(min: Size, max: Size) -> Self {
-        PrefSize{
-            min,
-            max,
-            grow: Vec2::ZERO
-        }
-    }
-    pub fn new(min: Size, max: Size, grow: Vec2) -> Self {
-        PrefSize {
-            min,
-            max,
-            grow,
-        }
-    }
-
-    pub fn zero() -> Self {
-        Self::fixed(Size::ZERO)
-    }
-
-    pub fn row(&mut self, other: Self) {
-        self.min.width += other.min.width;
-        self.min.height = self.min.height.max(other.min.height);
-        self.max.width += other.max.width;
-        self.max.height = self.max.height.max(other.max.height);
-        self.grow.x += other.grow.x;
-        self.grow.y += self.grow.y.max(other.grow.y);
-    }
-    pub fn column(&mut self, other: Self) {
-        self.min.width = self.min.width.max(other.min.width);
-        self.min.height += other.min.height;
-        self.max.width = self.max.width.max(other.max.height);
-        self.max.height += other.max.height;
-        self.grow.x += self.grow.x.max(other.grow.x);
-        self.grow.y += other.grow.y;
-    }
-    pub fn set_grow_x(&mut self) {
-        self.grow.x = self.grow.x.max(1.0);
-    }
-    pub fn set_grow_y(&mut self) {
-        self.grow.y = self.grow.y.max(1.0);
-    }
 }
 
 

@@ -5,7 +5,7 @@ use druid_shell::kurbo::{Rect, Size};
 use gui::widget_graph::WidgetContext;
 use gui::event::Event;
 use gui::state::key::Key;
-use gui::widgets::layout::{HBox, Container, Spacing, VBox};
+use gui::widgets::layout::{HBox, Container, Spacing, VBox, padding};
 
 struct ColorRect(Color, bool);
 
@@ -55,14 +55,15 @@ fn test_layout(spacing: Spacing) -> impl Widget<u32> {
 fn main() {
     WindowBuilder::new()
         .open(
-            Container::new(VBox::new(Spacing::Between, 10.0))
-                .child(Label::new("Spacing::Between"))
-                .child(test_layout(Spacing::Between))
+            padding(20.0, Container::new(VBox::new(Spacing::Between, 10.0))
                 .child(Label::new("Spacing::Around"))
                 .child(test_layout(Spacing::Around))
                 .child(Label::new("Spacing::Equal"))
                 .child(test_layout(Spacing::Equal))
                 .child(Label::new("Spacing::Padding"))
                 .child(test_layout(Spacing::Padding))
-        )
+                .child(Label::new("Spacing::Between"))
+                .child(test_layout(Spacing::Between))
+
+        ))
 }

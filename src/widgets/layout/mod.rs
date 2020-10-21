@@ -7,8 +7,12 @@ pub use hbox::HBox;
 pub use vbox::VBox;
 pub use container::Container;
 
-use druid_shell::kurbo::{Size, Vec2};
-use crate::widgets::PrefSize;
+use druid_shell::kurbo::{Size, Vec2, Rect, Affine};
+use crate::widgets::Widget;
+use crate::widget_graph::WidgetContext;
+use crate::event::Event;
+use druid_shell::piet::{Piet, RenderContext};
+use crate::state::key::Key;
 
 pub struct ChildMeta<Meta> {
     pub meta: Meta,
@@ -106,3 +110,119 @@ pub enum Spacing {
     Right,
 }
 
+pub static GROW_IF_NEEDED: f64 = 0.0000001;
+pub static GROW_NORMAL: f64 = 1.0;
+pub static DONT_GROW: f64 = 0.0;
+
+#[derive(Copy, Clone, PartialEq)]
+pub struct PrefSize {
+    min: Size,
+    max: Size,
+    grow: Vec2,
+}
+
+impl PrefSize {
+    pub fn fixed(size: Size) -> Self {
+        PrefSize{
+            min: size,
+            max: size,
+            grow: Vec2::ZERO
+        }
+    }
+    pub fn min_max(min: Size, max: Size) -> Self {
+        PrefSize{
+            min,
+            max,
+            grow: Vec2::ZERO
+        }
+    }
+    pub fn new(min: Size, max: Size, grow: Vec2) -> Self {
+        PrefSize {
+            min,
+            max,
+            grow,
+        }
+    }
+
+    pub fn zero() -> Self {
+        Self::fixed(Size::ZERO)
+    }
+
+    pub fn row(&mut self, other: Self) {
+        self.min.width += other.min.width;
+        self.min.height = self.min.height.max(other.min.height);
+        self.max.width += other.max.width;
+        self.max.height = self.max.height.max(other.max.height);
+        self.grow.x += other.grow.x;
+        self.grow.y += self.grow.y.max(other.grow.y);
+    }
+    pub fn column(&mut self, other: Self) {
+        self.min.width = self.min.width.max(other.min.width);
+        self.min.height += other.min.height;
+        self.max.width = self.max.width.max(other.max.height);
+        self.max.height += other.max.height;
+        self.grow.x += self.grow.x.max(other.grow.x);
+        self.grow.y += other.grow.y;
+    }
+    pub fn resize(&mut self, size: impl Into<Size>) {
+        let size = size.into();
+        self.min += size;
+        self.max += size;
+    }
+
+    pub fn set_grow_x(&mut self) {
+        self.grow.x = self.grow.x.max(GROW_NORMAL);
+    }
+    pub fn set_grow_y(&mut self) {
+        self.grow.y = self.grow.y.max(GROW_NORMAL);
+    }
+    pub fn grow_needed_x(&mut self) {
+        self.grow.x = self.grow.x.max(GROW_IF_NEEDED);
+    }
+    pub fn grow_needed_y(&mut self) {
+        self.grow.y = self.grow.y.max(GROW_IF_NEEDED);
+    }
+    pub fn dont_grow_x(&mut self) {
+        self.grow.x = DONT_GROW
+    }
+    pub fn dont_grow_y(&mut self) {
+        self.grow.y = DONT_GROW
+    }
+}
+
+pub struct Padding<W>(W, Size, Size);
+
+impl<T: Clone, W: Widget<T>> Widget<T> for Padding<W> {
+    fn draw(&mut self, painter: &mut Piet, size: Size, dirty_rect: Rect, context: WidgetContext, data: &T) {
+        painter.transform(Affine::translate(self.1.to_vec2()));
+        self.0.draw(painter, size - self.2, dirty_rect.inflate(-self.1.width, -self.1.height), context, data);
+        painter.transform(Affine::translate(-self.1.to_vec2()));
+    }
+
+    fn handle_event(&mut self, mut event: Event, context: WidgetContext, data: Key<T>) {
+        if event.shift(self.1.to_vec2()) {
+            self.0.handle_event(event, context, data)
+        }
+    }
+
+    fn get_pref_size(&mut self, context: WidgetContext, data: &T) -> PrefSize {
+        let mut pref = self.0.get_pref_size(context, data);
+        pref.resize(self.2);
+        pref
+    }
+
+    fn layout(&mut self, size: Size, context: WidgetContext, data: &T) {
+        self.0.layout(size - self.2, context, data)
+    }
+
+    fn build(&mut self, context: WidgetContext) {
+        self.0.build(context)
+    }
+    fn traverse_focus(&mut self, context: WidgetContext) -> bool {
+        self.0.traverse_focus(context)
+    }
+}
+
+pub fn padding<W>(size: f64, widget: W) -> Padding<W> {
+    Padding(widget, Size::new(size, size), Size::new(size * 2.0, size * 2.0))
+}

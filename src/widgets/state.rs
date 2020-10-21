@@ -4,7 +4,7 @@ use druid_shell::piet::Piet;
 use crate::widgets::Widget;
 use druid_shell::kurbo::{Size, Rect};
 use crate::state::key::Key;
-use crate::widgets::PrefSize;
+use crate::widgets::layout::PrefSize;
 use crate::widget_graph::WidgetContext;
 use std::any::Any;
 
