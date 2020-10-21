@@ -2,16 +2,16 @@ use crate::widgets::layout::{Layout, WidgetList, Spacing};
 use crate::widgets::PrefSize;
 use druid_shell::kurbo::{Size, Vec2};
 
-pub struct HBox{
+pub struct VBox {
     inner: PrefSize,
     spacing: Spacing,
     children: u32,
     padding: f64,
 }
 
-impl Default for HBox{
+impl Default for VBox {
     fn default() -> Self {
-        HBox{
+        VBox {
             inner: PrefSize::zero(),
             spacing: Spacing::Left,
             children: 0,
@@ -21,9 +21,9 @@ impl Default for HBox{
 
 }
 
-impl HBox {
+impl VBox {
     pub fn new(spacing: Spacing, padding: f64) -> Self {
-        HBox {
+        VBox {
             inner: PrefSize::zero(),
             children: 0,
             spacing,
@@ -38,7 +38,7 @@ impl HBox {
             let mut pref_size = self.inner;
             pref_size.min.width += const_padding;
             pref_size.max.width += const_padding;
-            pref_size.set_grow_x();
+            pref_size.set_grow_y();
             pref_size
         }
     }
@@ -81,7 +81,7 @@ impl Default for Index {
     }
 }
 
-impl Layout for HBox {
+impl Layout for VBox {
     type Constrain = Index;
     type Meta = ();
     const CAN_OVERLAP: bool = false;
@@ -108,7 +108,7 @@ impl Layout for HBox {
         self.inner = PrefSize::zero();
         self.children = widgets.count();
         widgets.iter_inner(|meta|{
-            self.inner.row(meta.pref);
+            self.inner.column(meta.pref);
         });
         self.with_const_padding()
     }
@@ -120,34 +120,34 @@ impl Layout for HBox {
 
     fn layout(&mut self, mut size: Size, widgets: &mut impl WidgetList<Self::Meta>) {
 
-        size.width -= self.const_padding();
+        size.height -= self.const_padding();
 
         let pref_size = self.inner;
 
-        let variance = pref_size.max.width - pref_size.min.width;
+        let variance = pref_size.max.height - pref_size.min.height;
 
         // A number between 0 and 1 to determine how much space is available
         // 0: min_size of less available => widgets will take the min_size
         // 1: max_size of more available => widgets will take the max_size
         // otherwise use the value to interpolate between min and max value
         let rel = if variance > 0.0 {
-            (size.width
-                .max(pref_size.min.width)
-                .min(pref_size.max.width)
-                - pref_size.min.width
+            (size.height
+                .max(pref_size.min.height)
+                .min(pref_size.max.height)
+                - pref_size.min.height
             ) / variance
         } else {
             1.0
         };
 
-        let remaining = size.width
-                .max(pref_size.max.width)
-                - pref_size.max.width;
+        let remaining = size.height
+            .max(pref_size.max.height)
+            - pref_size.max.height;
 
         let mut add = 0.0;
 
-        let (mut padding, mut next_x) = if pref_size.grow.x > 0.0 {
-            add = remaining / pref_size.grow.x;
+        let (mut padding, mut next_y) = if pref_size.grow.y > 0.0 {
+            add = remaining / pref_size.grow.y;
             (0.0, 0.0)
         } else {
             match self.spacing {
@@ -161,28 +161,29 @@ impl Layout for HBox {
         };
 
         padding += self.middle_padding();
-        next_x += self.start_padding();
+        next_y += self.start_padding();
 
 
         widgets.iter_inner_mut(|child| {
             let child_pref = child.pref;
             let child_size =
-                Size::new(child_pref.min.width * (1.0 - rel) +
-                              child_pref.max.width * rel +
-                              child_pref.grow.x * add,
-                          if child_pref.grow.y != 0.0 {
-                                    size.height
-                                        .max(child_pref.min.height)
-                                } else {
-                                    size.height
-                                        .min(child_pref.max.height)
-                                        .max(child_pref.min.height)
-                                }
+                Size::new(if child_pref.grow.x != 0.0 {
+                    size.width
+                        .max(child_pref.min.width)
+                } else {
+                    size.width
+                        .min(child_pref.max.width)
+                        .max(child_pref.min.width)
+                },
+                          child_pref.min.height * (1.0 - rel) +
+                              child_pref.max.height * rel +
+                              child_pref.grow.y * add
+
                 );
 
             child.size = child_size;
-            child.offset = Vec2::new(next_x, 0.0);
-            next_x += child_size.width + padding;
+            child.offset = Vec2::new(0.0, next_y);
+            next_y += child_size.height + padding;
         });
     }
 }

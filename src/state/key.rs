@@ -14,7 +14,11 @@ impl<'a, T: Clone + Send + Sync + 'static> Key<'a, T> {
         }
     }
 
-    pub fn borrow(&mut self) -> Key<T> {
+
+}
+
+impl<'a, T: Clone> Key<'a, T> {
+    pub fn id(&mut self) -> Key<T> {
         Key {
             value: self.value,
             state_id: self.state_id,

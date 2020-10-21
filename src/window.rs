@@ -29,20 +29,27 @@ impl Window {
         }
     }
 
-    fn update_widgets(&mut self) {
+    fn update_states(&mut self) {
         sync_states();
         let changes: Vec<_> = self.change_queue.try_iter().collect();
         self.widgets.update(&changes);
+        self.update_widgets();
+    }
+
+    fn update_widgets(&mut self) {
         self.widgets.layout(self.size);
-        if let Some((rect, handle)) = self.widgets.dirty().zip(self.window_handle.as_ref()) {
-            handle.invalidate_rect(rect);
+        if let Some(ref handle) = self.window_handle {
+            handle.invalidate();
         }
+        /*if let Some((rect, handle)) = self.widgets.dirty().zip(self.window_handle.as_ref()) {
+            handle.invalidate_rect(rect);
+        }*/
     }
 
     fn handle_event(&mut self, event: Event) {
         self.widgets.handle_event(event);
 
-        self.update_widgets();
+        self.update_states();
     }
 }
 
@@ -53,7 +60,7 @@ impl WinHandler for Window {
 
         handle.show();
 
-        self.update_widgets();
+        self.update_states();
     }
 
     fn size(&mut self, size: Size) {
@@ -64,8 +71,7 @@ impl WinHandler for Window {
     }
 
     fn paint(&mut self, piet: &mut Piet, invalid_rect: Rect) -> bool {
-        println!("Repaint Window!");
-        self.widgets.draw_widgets(piet, invalid_rect)
+        self.widgets.draw_widgets(piet, self.size, invalid_rect)
     }
 
     fn mouse_move(&mut self, event: &MouseEvent) {

@@ -58,15 +58,16 @@ impl WidgetGraph {
     pub fn dirty(&self) -> Option<Rect> {
         self.dirty_rect.clone()
     }
-    pub fn pref_size(&self) -> PrefSize {
+    pub fn pref_size(&mut self) -> PrefSize {
         self.tree.get_pref_size(WidgetContext{}, self.data.read())
     }
 
     pub fn layout(&mut self, size: Size) {
+        self.tree.get_pref_size(WidgetContext{}, self.data.read());
         self.tree.layout(size, WidgetContext{}, self.data.read())
     }
-    pub fn draw_widgets(&mut self, piet: &mut Piet, dirty_rect: Rect) -> bool {
-        self.tree.draw(piet, dirty_rect, WidgetContext{}, self.data.read());
+    pub fn draw_widgets(&mut self, piet: &mut Piet, size: Size, dirty_rect: Rect) -> bool {
+        self.tree.draw(piet, size, dirty_rect, WidgetContext{}, self.data.read());
         false
     }
 }

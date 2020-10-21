@@ -27,7 +27,7 @@ pub enum StateWrapper{
 
 
 impl<T: Clone> Widget<T> for StateWrapper {
-    fn draw(&self, painter: &mut Piet, dirty_rect: Rect, context: WidgetContext, data: &T) {
+    fn draw(&mut self, painter: &mut Piet, size: Size, dirty_rect: Rect, context: WidgetContext, data: &T) {
         unimplemented!()
     }
 
@@ -35,7 +35,7 @@ impl<T: Clone> Widget<T> for StateWrapper {
         unimplemented!()
     }
 
-    fn get_pref_size(&self, context: WidgetContext, data: &T) -> PrefSize {
+    fn get_pref_size(&mut self, context: WidgetContext, data: &T) -> PrefSize {
         unimplemented!()
     }
 

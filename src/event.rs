@@ -1,5 +1,5 @@
 use druid_shell::MouseEvent;
-use druid_shell::kurbo::Vec2;
+use druid_shell::kurbo::{Vec2, Rect};
 
 pub enum Event{
     MouseEnter(MouseEvent),
@@ -19,4 +19,24 @@ impl Event {
             _ => {}
         }
     }
+    pub fn mouse_event(&self) -> Option<&MouseEvent> {
+        match self {
+            Event::MouseEnter(me) => {Some(me)}
+            Event::MouseMove(me) => {Some(me)}
+            Event::MouseDown(me) => {Some(me)}
+            Event::MouseUp(me) => {Some(me)}
+            _ => None
+        }
+    }
+}
+
+enum Change {
+    None,
+    Content(Rect),
+    Bounds,
+}
+
+enum EventResponse {
+    Consumed(Change),
+    
 }

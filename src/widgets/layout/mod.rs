@@ -1,85 +1,108 @@
 mod hbox;
-
+mod container;
+mod const_contaner;
+mod list_container;
+mod vbox;
 pub use hbox::HBox;
+pub use vbox::VBox;
+pub use container::Container;
 
-use druid_shell::kurbo::{Size, Rect, Vec2, Affine};
-use crate::widgets::{Widget, PrefSize};
-use crate::widget_graph::WidgetContext;
-use crate::event::Event;
-use druid_shell::piet::{Piet, RenderContext};
-use crate::state::key::Key;
+use druid_shell::kurbo::{Size, Vec2};
+use crate::widgets::PrefSize;
 
-struct Child<W> {
-    widget: W,
-    offset: Vec2,
-    size: Size,
+pub struct ChildMeta<Meta> {
+    pub meta: Meta,
+    pub offset: Vec2,
+    pub size: Size,
+    pub pref: PrefSize,
+}
+
+impl<Meta> ChildMeta<Meta> {
+    pub fn empty(meta: Meta) -> Self {
+        ChildMeta {
+            meta,
+            offset: Vec2::ZERO,
+            size: Size::ZERO,
+            pref: PrefSize::zero(),
+        }
+    }
+    pub fn new(meta: Meta, offset: Vec2, size: Size, pref_size: PrefSize) -> Self {
+        ChildMeta {
+            meta,
+            offset,
+            size,
+            pref: pref_size,
+        }
+    }
+}
+
+pub trait WidgetList<Meta> {
+    fn iter_inner(&self, iterator: impl FnMut(&ChildMeta<Meta>));
+    fn iter_inner_mut(&mut self, iterator: impl FnMut(&mut ChildMeta<Meta>));
+    fn get_with(&self, index: usize, iterator: impl FnMut(&ChildMeta<Meta>));
+    fn get_mut_with(&mut self, index: usize, iterator: impl FnMut(&mut ChildMeta<Meta>));
+    fn count(&self) -> u32;
 }
 
 /// The Layout of a Container
 /// the display order is back to front
-pub trait Layout<T: Clone, W: Widget<T>> {
+pub trait Layout {
+    /// Constrain is the
     type Constrain;
     type Meta;
 
-    fn insert(&mut self, widget: W, constrain: Self::Constrain) -> u32;
-    fn calc_pref_size(&self, context: WidgetContext, data: &T) -> PrefSize;
-    fn layout(&mut self, size: Size, context: WidgetContext, data: &T);
-    fn get_widgets(&self) -> &[(Child<W>, Self::Meta)];
-    fn get_widgets_mut(&mut self) -> &mut [(Child<W>, Self::Meta)];
+    ///
+    const CAN_OVERLAP: bool = true;
 
-}
 
-pub trait ListLayout<T: Clone, W: Widget<T>>: Layout<T, W> + Default {
-    fn append(&mut self, widget: W) -> u32;
+    fn insert(&mut self, constrain: Self::Constrain) -> (u32, Self::Meta);
     fn remove(&mut self, index: u32);
+    fn clear(&mut self);
+
+    fn overlaping(&self) -> bool;
+    fn calc_pref_size(&mut self, widgets: &impl WidgetList<Self::Meta>) -> PrefSize;
+    fn get_pref_size(&self) -> PrefSize;
+    fn layout(&mut self, size: Size, widgets: &mut impl WidgetList<Self::Meta>);
+
 }
 
-pub struct Container<L> {
-    layout: L,
-    mouse_focus: Option<u32>,
-    focus: Option<u32>,
+pub trait ListLayout: Layout + Default {
+    fn next(&mut self) -> Self::Meta;
 }
 
-impl<T, W: Widget<T>, L: Layout<T, W>> Container<L> {
-    pub fn new(layout: L) -> Self {
-        Container {
-            layout,
-            mouse_focus: None,
-            focus: None,
-        }
-    }
-    pub fn with(mut self, constrain: L::Constrain, widget: W) -> Self {
-        self.layout.insert(widget, constrain);
-        self
-    }
+/// Defines how a container should place its children if there is additional space but
+/// none of them wants to grow.
+/// If there is only one child, all options except Left and Right behave the same
+pub enum Spacing {
+    /// Creates space between the Child Widgets, but not at the End
+    ///
+    /// (| W1 |--------|  W2  |--------|W3|--------| W4 |)
+    ///
+    Between,
+    /// Creates space at the Left and Right End, but not between the Children
+    ///
+    /// (---| W1 |------|  W2  |------|W3|------| W4 |---)
+    ///
+    Padding,
+    /// creates equaly lange space around each Child
+    ///
+    /// (------------| W1 ||  W2  ||W3|| W4 |------------)
+    ///
+    Around,
+    ///
+    ///
+    /// (-----| W1 |-----|  W2  |-----|W3|-----| W4 |-----)
+    ///
+    Equal,
+    /// Creates all space at the left end
+    ///
+    /// (------------------------| W1 ||  W2  ||W3|| W4 |)
+    ///
+    Left,
+    /// Creates all space at the right end
+    ///
+    /// (| W1 ||  W2  ||W3|| W4 |------------------------)
+    ///
+    Right,
 }
 
-impl<T, W: Widget<T>, L: Layout<T, W>> Widget<T> for Container<L> {
-    fn draw(&self, painter: &mut Piet, dirty_rect: Rect, context: WidgetContext, data: &T) {
-        for (child, _) in self.layout.get_widgets() {
-            painter.with_save(|painter|{
-                painter.transform(Affine::translate(child.offset));
-                child.widget.draw(painter, dirty_rect, context.id(), data);//TODO: translate dirty rect!
-                Ok(())
-            });
-        }
-    }
-
-    fn handle_event(&mut self, event: Event, context: WidgetContext, data: Key<T>) {
-        //TODO: implement
-    }
-
-    fn get_pref_size(&self, context: WidgetContext, data: &T) -> PrefSize {
-        self.layout.calc_pref_size(context, data)
-    }
-
-    fn layout(&mut self, size: Size, context: WidgetContext, data: &T) {
-        self.layout.layout(size, context, data);
-    }
-
-    fn build(&mut self, mut context: WidgetContext) {
-        for (child, _) in self.layout.get_widgets_mut() {
-            child.widget.build(context.id())
-        }
-    }
-}
