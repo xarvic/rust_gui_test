@@ -200,10 +200,10 @@ impl<T: Clone, W: Widget<T>> Widget<T> for Padding<W> {
     }
 
     fn handle_event(&mut self, mut event: Event, context: WidgetContext, data: Key<T>) -> EventResponse{
-        if event.shift(self.1.to_vec2()) {
-            self.0.handle_event(event, context, data)
+        if event.shift(self.1.to_vec2(), Size::from((f64::INFINITY, f64::INFINITY))) {//TODO: fix me size is unknown!
+            self.0.handle_event(event, context, data).shift(self.1.to_vec2())
         } else {
-            EventResponse::Valid
+            EventResponse::NONE
         }
     }
 

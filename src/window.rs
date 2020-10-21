@@ -38,12 +38,10 @@ impl Window {
 
     fn update_widgets(&mut self) {
         self.widgets.layout(self.size);
-        if let Some(ref handle) = self.window_handle {
-            handle.invalidate();
-        }
-        /*if let Some((rect, handle)) = self.widgets.dirty().zip(self.window_handle.as_ref()) {
+
+        if let Some((rect, handle)) = self.widgets.dirty().zip(self.window_handle.as_ref()) {
             handle.invalidate_rect(rect);
-        }*/
+        }
     }
 
     fn handle_event(&mut self, event: Event) {

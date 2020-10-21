@@ -30,7 +30,7 @@ impl<T: Clone> Widget<T> for Label {
     }
 
     fn handle_event(&mut self, event: Event, context: WidgetContext, data: Key<T>) -> EventResponse{
-        EventResponse::Valid
+        EventResponse::NONE
     }
 
     fn get_pref_size(&mut self, context: WidgetContext, data: &T) -> PrefSize {

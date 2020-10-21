@@ -34,7 +34,7 @@ pub struct Empty;
 impl<T: Clone> Widget<T> for Empty{
     fn draw(&mut self, painter: &mut Piet, size: Size, dirty_rect: Rect, context: WidgetContext, data: &T) {}
 
-    fn handle_event(&mut self, event: Event, context: WidgetContext, data: Key<T>) -> EventResponse{ EventResponse::Valid }
+    fn handle_event(&mut self, event: Event, context: WidgetContext, data: Key<T>) -> EventResponse{ EventResponse::NONE }
 
     fn get_pref_size(&mut self, context: WidgetContext, data: &T) -> PrefSize { PrefSize::fixed(Size::ZERO) }
 

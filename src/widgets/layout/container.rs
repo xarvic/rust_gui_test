@@ -74,7 +74,7 @@ impl<T: Clone + 'static, L: Layout> Widget<T> for Container<T, L> {
     }
 
     fn handle_event(&mut self, mut event: Event, context: WidgetContext, mut data: Key<T>) -> EventResponse{
-        let mut respone = EventResponse::Valid;
+        let mut response = EventResponse::NONE;
 
         if let Some(me) = event.mouse_event() {
             let mut consumer = None;
@@ -87,7 +87,7 @@ impl<T: Clone + 'static, L: Layout> Widget<T> for Container<T, L> {
             //Exit old widget
             if let Some(old) = self.mouse_focus {
                 if consumer != Some(old) {
-                    self.widgets[old as usize].0.handle_event(Event::MouseExit, context.id(), data.id());
+                    response = response.merge(self.widgets[old as usize].0.handle_event(Event::MouseExit, context.id(), data.id()).shift(self.widgets[old as usize].1.offset));
                 }
             }
             //Enter new widget
@@ -97,13 +97,15 @@ impl<T: Clone + 'static, L: Layout> Widget<T> for Container<T, L> {
                 child_event.pos -= meta.offset;
 
                 if self.mouse_focus != Some(new) {
-                    respone.merge(child.handle_event(Event::MouseEnter(child_event.clone()), context.id(), data.id()));
+                    response = response.merge(child.handle_event(Event::MouseEnter(child_event.clone()), context.id(), data.id()).shift(meta.offset));
                 }
                 if let Event::MouseEnter(_) = event {
                     //Do nothing (already done)!
                 } else {
-                    event.shift(meta.offset);
-                    child.handle_event(event, context.id(), data.id());
+                    //Process Event
+                    if event.shift(meta.offset, meta.size) {
+                        response = response.merge(child.handle_event(event, context.id(), data.id()).shift(meta.offset));
+                    }
                 }
             }
             self.mouse_focus = consumer;
@@ -111,7 +113,7 @@ impl<T: Clone + 'static, L: Layout> Widget<T> for Container<T, L> {
 
         }
 
-        respone
+        response
     }
 
     fn get_pref_size(&mut self, context: WidgetContext, data: &T) -> PrefSize {
