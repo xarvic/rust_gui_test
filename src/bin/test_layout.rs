@@ -6,6 +6,7 @@ use gui::widget_graph::WidgetContext;
 use gui::event::{Event, EventResponse};
 use gui::state::key::Key;
 use gui::widgets::layout::{HBox, Container, Spacing, VBox, padding};
+use gui::style::background::background;
 
 struct ColorRect(Color, bool, Size);
 
@@ -63,11 +64,11 @@ impl Widget<u32> for ColorRect {
 }
 
 fn test_layout(spacing: Spacing) -> impl Widget<u32> {
-    Container::new(HBox::new(spacing, 0.0))
+    background(Color::rgba8(30, 30, 30, 255), Container::new(HBox::new(spacing, 0.0))
         .child(ColorRect::new(Color::rgb8(180, 0, 0)))
         .child(ColorRect::new(Color::rgb8(60, 0, 150)))
         .child(ColorRect::new(Color::rgb8(0, 200, 200)))
-        .child(ColorRect::new(Color::rgb8(0, 200, 0)))
+        .child(ColorRect::new(Color::rgb8(0, 200, 0))))
 }
 
 fn main() {

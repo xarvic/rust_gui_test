@@ -9,6 +9,7 @@ pub mod state;
 pub mod lens;
 
 mod text;
+mod stacked;
 
 pub use text::Label;
 pub use layout::PrefSize;

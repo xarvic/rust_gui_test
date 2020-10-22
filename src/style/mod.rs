@@ -1,9 +1,24 @@
-use druid_shell::piet::{StrokeStyle, Brush, Piet};
+pub mod background;
+
+use druid_shell::piet::{StrokeStyle, Brush, Piet, Color, RenderContext};
 use druid_shell::kurbo::Size;
 use std::sync::Arc;
 
 struct Background {
-    brush: Brush,
+    color: Color,
+}
+
+impl Background {
+    pub fn from_color(color: Color) -> Self{
+        Background {
+            color,
+        }
+    }
+
+    pub fn draw(&self, piet: &mut Piet, size: Size) {
+        let brush = piet.solid_brush(self.color.clone());
+        piet.fill(size.to_rect(), &brush);
+    }
 }
 
 

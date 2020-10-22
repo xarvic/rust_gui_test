@@ -4,7 +4,7 @@ use crate::event::{Event, EventResponse};
 use crate::widget_graph::WidgetContext;
 use crate::state::key::Key;
 use druid_shell::kurbo::{Size, Affine, Rect};
-use druid_shell::piet::{Piet, RenderContext, Color};
+use druid_shell::piet::{Piet, RenderContext};
 
 type List<T, Meta> = Vec<(Box<dyn Widget<T>>, ChildMeta<Meta>)>;
 
@@ -132,5 +132,17 @@ impl<T: Clone + 'static, L: Layout> Widget<T> for Container<T, L> {
         for (child, _) in self.widgets.iter_mut() {
             child.build(context.id())
         }
+    }
+    fn traverse_focus(&mut self, context: WidgetContext) -> bool {
+        let index = self.focus.map_or(0, |index|index as usize);
+
+        for (index, (child, _)) in self.widgets.iter_mut().enumerate().skip(index) {
+            if child.traverse_focus(context.id()) {
+                self.focus = Some(index as u32);
+                return true;
+            }
+        }
+        self.focus = None;
+        false
     }
 }

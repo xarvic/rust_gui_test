@@ -156,6 +156,7 @@ impl PrefSize {
         self.grow.x += other.grow.x;
         self.grow.y += self.grow.y.max(other.grow.y);
     }
+
     pub fn column(&mut self, other: Self) {
         self.min.width = self.min.width.max(other.min.width);
         self.min.height += other.min.height;
@@ -164,6 +165,15 @@ impl PrefSize {
         self.grow.x += self.grow.x.max(other.grow.x);
         self.grow.y += other.grow.y;
     }
+
+    pub fn stacked(self, other: Self) -> Self {
+        PrefSize {
+            min: Size::new(self.min.width.max(other.min.width), self.min.height.max(other.min.height)),
+            max: Size::new(self.max.width.max(other.max.width), self.max.height.max(other.max.height)),
+            grow: Vec2::new(self.grow.x.max(other.grow.x), self.grow.y.max(other.grow.y))
+        }
+    }
+
     pub fn resize(&mut self, size: impl Into<Size>) {
         let size = size.into();
         self.min += size;
