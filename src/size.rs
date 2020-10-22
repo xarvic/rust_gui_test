@@ -20,18 +20,24 @@ impl PrefSize {
         }
     }
     pub fn min_max(min: Size, max: Size) -> Self {
-        PrefSize{
-            min: min.expand(),
-            max: max.expand(),
-            grow: Vec2::ZERO
-        }
+        PrefSize::new(min, max, Vec2::new(DONT_GROW, DONT_GROW))
     }
     pub fn new(min: Size, max: Size, grow: Vec2) -> Self {
-        PrefSize {
+        let mut this = PrefSize {
             min: min.expand(),
             max: max.expand(),
             grow: grow.expand(),
-        }
+        };
+        this.max_max_size(this.min);
+        this
+    }
+
+    pub fn growing(size: Size) -> Self {
+        Self::new(size, size, Vec2::new(GROW_NORMAL, GROW_NORMAL))
+    }
+
+    pub fn grow_if_needed(size: Size) -> Self {
+        Self::new(size, size, Vec2::new(GROW_IF_NEEDED, GROW_IF_NEEDED))
     }
 
     pub fn zero() -> Self {
@@ -70,6 +76,25 @@ impl PrefSize {
         self.max += size;
     }
 
+    pub fn max_min_size(&mut self, size: Size) {
+        self.min = Size::new(self.min.width.max(size.width), self.min.height.max(size.height))
+    }
+    pub fn min_min_size(&mut self, size: Size) {
+        self.min = Size::new(self.min.width.min(size.width), self.min.height.min(size.height))
+    }
+    pub fn max_max_size(&mut self, size: Size) {
+        self.max = Size::new(self.max.width.max(size.width), self.max.height.max(size.height))
+    }
+    pub fn min_max_size(&mut self, size: Size) {
+        self.max = Size::new(self.max.width.min(size.width), self.max.height.min(size.height))
+    }
+    pub fn max_grow(&mut self, size: Vec2) {
+        self.grow = Vec2::new(self.grow.x.max(size.x), self.grow.y.max(size.y))
+    }
+    pub fn min_grow(&mut self, size: Vec2) {
+        self.grow = Vec2::new(self.grow.x.min(size.x), self.grow.y.min(size.y))
+    }
+
     pub fn set_grow_x(&mut self) {
         self.grow.x = self.grow.x.max(GROW_NORMAL);
     }
@@ -89,4 +114,6 @@ impl PrefSize {
         self.grow.y = DONT_GROW
     }
 }
+
+
 

@@ -7,7 +7,6 @@ use gui::event::{Event, EventResponse};
 use gui::state::key::Key;
 use gui::widgets::layout::{HBox, Container, Spacing, VBox};
 use gui::size::PrefSize;
-use gui::widgets::style::background::background;
 use gui::widgets::text::Label;
 use gui::widgets::raw::Padding;
 
@@ -67,17 +66,21 @@ impl Widget<u32> for ColorRect {
 }
 
 fn test_layout(spacing: Spacing, index: u32) -> impl Widget<u32> {
-    background(Color::rgba8(30, 30, 30, 255), Container::new(HBox::new(spacing, 0.0))
+     Container::new(HBox::new(spacing, 0.0))
         .child(ColorRect::new(Color::rgb8(180, 0, 0), index + 1))
-        .child(ColorRect::new(Color::rgb8(60, 0, 150), index + 2))
+        .child(
+            ColorRect::new(Color::rgb8(60, 0, 150), index + 2)
+                .loosen_size(PrefSize::fixed(Size::new(30.0, 150.0)))
+        )
         .child(ColorRect::new(Color::rgb8(0, 200, 200), index + 3))
-        .child(ColorRect::new(Color::rgb8(0, 200, 0), index + 4)))
+        .child(ColorRect::new(Color::rgb8(0, 200, 0), index + 4))
+     .background(Color::grey8(30))
 }
 
 fn main() {
     WindowBuilder::new()
         .open(
-            Container::new(VBox::new(Spacing::Between, 10.0))
+            Container::new(VBox::new(Spacing::Between, 5.0))
                 .child(Label::new("Spacing::Around"))
                 .child(test_layout(Spacing::Around, 10))
                 .child(Label::new("Spacing::Equal"))
@@ -86,6 +89,7 @@ fn main() {
                 .child(test_layout(Spacing::Padding, 30))
                 .child(Label::new("Spacing::Between"))
                 .child(test_layout(Spacing::Between, 40))
-                .wrap(Padding::equal(20.0))
+            .background(Color::grey8(50))
+            .wrap(Padding::equal(20.0))
         )
 }
