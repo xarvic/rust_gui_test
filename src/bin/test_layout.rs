@@ -70,7 +70,7 @@ fn test_layout(spacing: Spacing, index: u32) -> impl Widget<u32> {
         .child(ColorRect::new(Color::rgb8(180, 0, 0), index + 1))
         .child(
             ColorRect::new(Color::rgb8(60, 0, 150), index + 2)
-                .loosen_size(PrefSize::fixed(Size::new(30.0, 150.0)))
+                .loosen_size(PrefSize::flexible((150.0, 150.0)))
         )
         .child(ColorRect::new(Color::rgb8(0, 200, 200), index + 3))
         .child(ColorRect::new(Color::rgb8(0, 200, 0), index + 4))

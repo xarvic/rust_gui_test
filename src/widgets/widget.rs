@@ -34,9 +34,12 @@ pub trait WidgetCompose<T: Clone>: Widget<T> where Self: Sized {
         background(color, self)
     }
     fn restrict_size(self, pref: PrefSize) -> PrefSizeWrapper<Self> {
-        PrefSizeWrapper::new(self, pref, true)
+        PrefSizeWrapper::new(self, pref, true, false, false)
     }
     fn loosen_size(self, pref: PrefSize) -> PrefSizeWrapper<Self> {
-        PrefSizeWrapper::new(self, pref, false)
+        PrefSizeWrapper::new(self, pref, false, true, false)
+    }
+    fn set_size(self, pref: PrefSize) -> PrefSizeWrapper<Self> {
+        PrefSizeWrapper::new(self, pref, false, false, true)
     }
 }

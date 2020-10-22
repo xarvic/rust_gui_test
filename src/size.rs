@@ -12,32 +12,41 @@ pub struct PrefSize {
 }
 
 impl PrefSize {
-    pub fn fixed(size: Size) -> Self {
+    pub fn fixed(size: impl Into<Size>) -> Self {
+        let size = size.into().expand();
         PrefSize{
-            min: size.expand(),
-            max: size.expand(),
+            min: size,
+            max: size,
             grow: Vec2::ZERO
         }
     }
-    pub fn min_max(min: Size, max: Size) -> Self {
+    pub fn min_max(min: impl Into<Size>, max: impl Into<Size>) -> Self {
         PrefSize::new(min, max, Vec2::new(DONT_GROW, DONT_GROW))
     }
-    pub fn new(min: Size, max: Size, grow: Vec2) -> Self {
+    pub fn new(min: impl Into<Size>, max: impl Into<Size>, grow: impl Into<Vec2>) -> Self {
         let mut this = PrefSize {
-            min: min.expand(),
-            max: max.expand(),
-            grow: grow.expand(),
+            min: min.into().expand(),
+            max: max.into().expand(),
+            grow: grow.into().expand(),
         };
         this.max_max_size(this.min);
         this
     }
 
-    pub fn growing(size: Size) -> Self {
-        Self::new(size, size, Vec2::new(GROW_NORMAL, GROW_NORMAL))
+    pub fn flexible(size: impl Into<Size>) -> Self {
+        Self::min_max(Size::ZERO, size)
     }
 
-    pub fn grow_if_needed(size: Size) -> Self {
-        Self::new(size, size, Vec2::new(GROW_IF_NEEDED, GROW_IF_NEEDED))
+    pub fn growing(mut self) -> Self {
+        self.set_grow_y();
+        self.set_grow_x();
+        self
+    }
+
+    pub fn grow_if_needed(mut self) -> Self {
+        self.grow_needed_y();
+        self.grow_needed_x();
+        self
     }
 
     pub fn zero() -> Self {

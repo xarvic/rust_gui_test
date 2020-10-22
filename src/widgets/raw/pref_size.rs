@@ -10,14 +10,18 @@ pub struct PrefSizeWrapper<W>{
     widget: W,
     pref_size: PrefSize,
     restrict: bool,
+    loosen: bool,
+    set_min_size: bool,
 }
 
 impl<W> PrefSizeWrapper<W> {
-    pub fn new(widget: W, pref_size: PrefSize, restrict: bool) -> Self {
+    pub fn new(widget: W, pref_size: PrefSize, restrict: bool, loosen: bool, set_min_size: bool) -> Self {
         PrefSizeWrapper{
             widget,
             pref_size,
             restrict,
+            loosen,
+            set_min_size,
         }
     }
 }
@@ -33,16 +37,22 @@ impl<T: Clone, W: Widget<T>> Widget<T> for PrefSizeWrapper<W> {
 
     fn get_pref_size(&mut self, context: WidgetContext, data: &T) -> PrefSize {
         let mut pref_size = self.widget.get_pref_size(context, data);
-        //pref_size.max_min_size(self.pref_size.min);
-        //I not sure if the widget should do this
+
+        if self.set_min_size {
+            pref_size.max_min_size(self.pref_size.min);
+        }
 
         if self.restrict {
             pref_size.min_max_size(self.pref_size.max);
             pref_size.max_max_size(pref_size.min);
             pref_size.min_grow(self.pref_size.grow);
-        } else {
+        } else if self.loosen {
             pref_size.max_max_size(self.pref_size.max);
             pref_size.max_grow(self.pref_size.grow);
+        } else {
+            pref_size.max = self.pref_size.max;
+            pref_size.max_max_size(pref_size.min);
+            pref_size.grow = self.pref_size.grow;
         }
 
         pref_size
