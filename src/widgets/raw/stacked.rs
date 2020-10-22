@@ -1,26 +1,36 @@
-use crate::widgets::{Widget, PrefSize};
+use crate::widgets::Widget;
 use druid_shell::kurbo::{Rect, Size};
 use crate::event::{EventResponse, Event};
 use crate::widget_graph::WidgetContext;
 use druid_shell::piet::{Piet, RenderContext};
 use crate::state::key::Key;
+use crate::size::PrefSize;
 
 #[derive(Eq, PartialEq, Copy, Clone)]
-enum AB {
+pub enum AB {
     A,
     B,
 }
 
-struct Stacked<A, B> {
+pub struct Stacked<A, B> {
     widget_top: A,
     widget_bottom: B,
     focus: Option<AB>,
     mouse_focus: Option<AB>,
 }
 
+pub fn statcked<A, B>(widget_top: A, widget_bottom: B) -> Stacked<A, B> {
+    Stacked{
+        widget_top,
+        widget_bottom,
+        focus: None,
+        mouse_focus: None
+    }
+}
+
 impl<T: Clone, A: Widget<T>, B: Widget<T>> Widget<T> for Stacked<A, B> {
     fn draw(&mut self, painter: &mut Piet, size: Size, dirty_rect: Rect, context: WidgetContext, data: &T) {
-        painter.with_save(|piet|{
+        let _ = painter.with_save(|piet|{
             self.widget_bottom.draw(piet, size, dirty_rect, context.id(), data);
             Ok(())
         });
@@ -30,7 +40,7 @@ impl<T: Clone, A: Widget<T>, B: Widget<T>> Widget<T> for Stacked<A, B> {
     fn handle_event(&mut self, event: Event, context: WidgetContext, mut data: Key<T>) -> EventResponse {
         let mut response = self.widget_top.handle_event(event.clone(), context.id(), data.id());
         if response.is_present() {
-            response.merge(self.widget_bottom.handle_event(event, context, data));
+            response = response.merge(self.widget_bottom.handle_event(event, context, data));
         }
         response
     }

@@ -3,9 +3,9 @@ use crate::state::{StateID, State};
 use druid_shell::kurbo::{Point, Size, Rect};
 use crate::event::{Event, Change};
 use druid_shell::piet::Piet;
-use crate::widgets::state::StateRootWidget;
-use crate::widgets::{Widget, PrefSize};
+use crate::widgets::{Widget, StateRootWidget};
 use crate::state::key::Key;
+use crate::size::PrefSize;
 
 pub struct StateRoot {
     widgets: Box<dyn StateRootWidget>,

@@ -1,9 +1,10 @@
-use crate::widgets::{Widget, PrefSize};
+use crate::widgets::Widget;
 use druid_shell::kurbo::{Rect, Size};
 use crate::widget_graph::WidgetContext;
 use crate::event::{Event, EventResponse};
 use druid_shell::piet::{Piet, RenderContext, PietTextLayout, FontBuilder, Text, TextLayout, Color, TextLayoutBuilder, PietText};
 use crate::state::key::Key;
+use crate::size::PrefSize;
 
 pub struct Label {
     text: String,

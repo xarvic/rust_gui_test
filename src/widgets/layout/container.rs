@@ -1,10 +1,11 @@
 use crate::widgets::layout::{WidgetList, ChildMeta, Layout};
-use crate::widgets::{Widget, PrefSize};
+use crate::widgets::Widget;
 use crate::event::{Event, EventResponse};
 use crate::widget_graph::WidgetContext;
 use crate::state::key::Key;
 use druid_shell::kurbo::{Size, Affine, Rect};
 use druid_shell::piet::{Piet, RenderContext};
+use crate::size::PrefSize;
 
 type List<T, Meta> = Vec<(Box<dyn Widget<T>>, ChildMeta<Meta>)>;
 
@@ -63,11 +64,19 @@ impl<T: Clone, L: Layout> Container<T, L> where L::Constrain: Default {
 impl<T: Clone + 'static, L: Layout> Widget<T> for Container<T, L> {
     fn draw(&mut self, painter: &mut Piet, size: Size, dirty_rect: Rect, context: WidgetContext, data: &T) {
         for (child, meta) in self.widgets.iter_mut() {
-            painter.with_save(|painter|{
-                painter.transform(Affine::translate(meta.offset));
-                child.draw(painter, meta.size, dirty_rect, context.id(), data);//TODO: translate dirty rect!
-                Ok(())
-            }).unwrap();
+            let child_dirty_rect = Rect::new(dirty_rect.x0 - meta.offset.x,
+                                             dirty_rect.y0 - meta.offset.y,
+                                             dirty_rect.x1 - meta.offset.x,
+                                             dirty_rect.y1 - meta.offset.y)
+                                    .intersect(size.to_rect());
+
+            if child_dirty_rect.area() >= 1.0 {
+                painter.with_save(|painter| {
+                    painter.transform(Affine::translate(meta.offset));
+                    child.draw(painter, meta.size, child_dirty_rect, context.id(), data);//TODO: translate dirty rect!
+                    Ok(())
+                }).unwrap();
+            }
         }
     }
 
@@ -124,6 +133,8 @@ impl<T: Clone + 'static, L: Layout> Widget<T> for Container<T, L> {
     fn layout(&mut self, size: Size, context: WidgetContext, data: &T) {
         self.layout.layout(size, &mut self.widgets);
         for (child, meta) in self.widgets.iter_mut() {
+            meta.size = meta.size.expand();
+            meta.offset = meta.offset.expand();
             child.layout(meta.size, context.id(), data);
         }
     }

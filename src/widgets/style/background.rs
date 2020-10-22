@@ -1,10 +1,11 @@
-use crate::style::Background;
-use crate::widgets::{Widget, PrefSize};
+use crate::widgets::Widget;
 use druid_shell::piet::{Color, Piet};
 use druid_shell::kurbo::{Rect, Size};
 use crate::event::{EventResponse, Event};
 use crate::widget_graph::WidgetContext;
 use crate::state::key::Key;
+use crate::widgets::style::Background;
+use crate::size::PrefSize;
 
 pub struct BackgroundWrapper<W> {
     widget: W,

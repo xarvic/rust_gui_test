@@ -1,12 +1,12 @@
 use crate::state::{StateID, State};
 use crate::event::{Event, EventResponse};
 use druid_shell::piet::Piet;
-use crate::widgets::Widget;
+use crate::widgets::widget::Widget;
 use druid_shell::kurbo::{Size, Rect};
 use crate::state::key::Key;
-use crate::widgets::layout::PrefSize;
 use crate::widget_graph::WidgetContext;
 use std::any::Any;
+use crate::size::PrefSize;
 
 pub trait StateRootWidget {
     fn update(&mut self) -> bool;
