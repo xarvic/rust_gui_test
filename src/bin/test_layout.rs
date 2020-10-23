@@ -8,7 +8,6 @@ use gui::state::key::Key;
 use gui::widgets::layout::{HBox, Container, Spacing, VBox};
 use gui::size::PrefSize;
 use gui::widgets::text::Label;
-use gui::widgets::raw::Padding;
 
 struct ColorRect(Color, bool, Size, u32);
 
@@ -74,7 +73,7 @@ fn test_layout(spacing: Spacing, index: u32) -> impl Widget<u32> {
         )
         .child(ColorRect::new(Color::rgb8(0, 200, 200), index + 3))
         .child(ColorRect::new(Color::rgb8(0, 200, 0), index + 4))
-     .background(Color::grey8(30))
+     .background(Color::grey8(30), 0.0)
 }
 
 fn main() {
@@ -89,7 +88,7 @@ fn main() {
                 .child(test_layout(Spacing::Padding, 30))
                 .child(Label::new("Spacing::Between"))
                 .child(test_layout(Spacing::Between, 40))
-            .background(Color::grey8(50))
-            .wrap(Padding::equal(20.0))
+            .background(Color::grey8(50), 10.0)
+            .padding(20.0)
         )
 }

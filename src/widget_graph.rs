@@ -1,10 +1,9 @@
 use std::collections::HashMap;
-use crate::state::{StateID, State};
+use crate::state::{StateID, CloneState, State};
 use druid_shell::kurbo::{Point, Size, Rect};
 use crate::event::{Event, Change};
 use druid_shell::piet::Piet;
 use crate::widgets::{Widget, StateRootWidget};
-use crate::state::key::Key;
 use crate::size::PrefSize;
 
 pub struct StateRoot {
@@ -30,23 +29,25 @@ impl WidgetContext {
 }
 
 pub struct WidgetGraph {
-    data: State<u32>,
+    data: CloneState<u32>,
     tree: Box<dyn Widget<u32>>,
     //tree: Tree<StateRoot>,
     dependent_nodes: HashMap<StateID, Vec<u32>>,
     dirty_rect: Option<Rect>,
     size: Size,
+    pref_size: PrefSize,
     re_layout: bool,
 }
 
 impl WidgetGraph {
     pub fn new<W: Widget<u32> + 'static>(root: W) -> Self {
         WidgetGraph {
-            data: State::new(0),
+            data: CloneState::new(0),
             tree: Box::new(root),
             dependent_nodes: HashMap::new(),
             dirty_rect: None,
             size: Size::ZERO,
+            pref_size: PrefSize::zero(),
             re_layout: true,
         }
     }
@@ -55,8 +56,11 @@ impl WidgetGraph {
 
     }
     pub fn handle_event(&mut self, event: Event) {
-        let key = Key::new(&mut self.data);
-        match self.tree.handle_event(event, WidgetContext{}, key).change() {
+        let tree = &mut self.tree;
+
+        let response = self.data.with_key(|key|tree.handle_event(event, WidgetContext{}, key));
+
+        match response.change() {
             Change::None => {}
             Change::Content(rect) => {
                 self.dirty_rect = Some(self.dirty_rect.map_or(rect, |old|old.union(rect)));
@@ -72,15 +76,23 @@ impl WidgetGraph {
         self.dirty_rect.clone()
     }
     pub fn pref_size(&mut self) -> PrefSize {
-        self.tree.get_pref_size(WidgetContext{}, self.data.read())
+        self.pref_size
     }
 
     pub fn layout(&mut self, size: Size) {
         if self.size != size || self.re_layout {
             self.size = size;
             self.re_layout = false;
-            self.tree.get_pref_size(WidgetContext {}, self.data.read());
-            self.tree.layout(size, WidgetContext {}, self.data.read());
+
+            let tree = &mut self.tree;
+
+
+            self.pref_size = self.data.with_value(|value|{
+                let pref = tree.get_pref_size(WidgetContext {}, value);
+                tree.layout(size, WidgetContext {}, value);
+
+                pref
+            });
         }
     }
     pub fn draw_widgets(&mut self, piet: &mut Piet, size: Size, dirty_rect: Rect) -> bool {
@@ -90,7 +102,12 @@ impl WidgetGraph {
                     dirty_rect.contains(Point::new(rect.x1, rect.y1))) {
             self.dirty_rect = None;
         }
-        self.tree.draw(piet, size, dirty_rect, WidgetContext{}, self.data.read());
+
+        let tree = &mut self.tree;
+
+        self.data.with_value(|value| {
+            tree.draw(piet, size, dirty_rect, WidgetContext {}, value);
+        });
         false
     }
 }

@@ -1,15 +1,20 @@
 use std::sync::atomic::{AtomicU64, Ordering};
 use std::sync::{RwLock, Arc};
-use std::ops::Deref;
+use std::ops::{Deref, DerefMut};
 
 pub mod key;
 pub mod lens;
 
 mod manager;
+mod clone_state;
+mod sync_state;
+
 pub use manager::sync_states;
+pub use clone_state::CloneState;
+
 use std::any::Any;
-use crate::state::manager::MANAGER;
 use druid_shell::Counter;
+use crate::state::key::Key;
 
 
 #[derive(Copy, Clone, Hash, Ord, PartialOrd, PartialEq, Eq)]
@@ -32,8 +37,6 @@ pub(crate) struct StateInner<T> {
 
 impl<T: Clone> StateInner<T> {
     fn new(value: T) -> Self {
-
-
         StateInner{
             id: StateID::new(),
             commit: AtomicU64::new(0),
@@ -43,51 +46,52 @@ impl<T: Clone> StateInner<T> {
     fn id(&self) -> StateID {
         self.id
     }
+
     fn commit(&self) -> u64 {
         self.commit.load(Ordering::SeqCst)
     }
-    fn fetch_value(&self, value: &mut T) {
-        value.clone_from(self.value.read().unwrap().deref());
+
+    fn use_value<R>(&self, operation: impl FnOnce(&T) -> R) -> R {
+        operation(self.value.read().unwrap().deref())
     }
+
+    /// Executes operation with the value and increases the commit
+    /// Returns the return value of the operation and the new commit!
+    fn update_value<R>(&self, operation: impl FnOnce(&mut T) -> R) -> (R, u64) {
+        let r = operation(self.value.write().unwrap().deref_mut());
+        let old = self.commit.fetch_add(1, Ordering::SeqCst);
+        (r, old + 1)
+    }
+    /// Executes operation with value. the commit value increases if operation returns true
+    /// Returns the return value of the operation and the new commit!
+    ///
+    /// #Safety
+    /// Other States wont notice the Statechange if operation changes the value, but doesnt return
+    /// true.
+    /// Key can solve this Problem!
+    unsafe fn update_maybe<R>(&self, operation: impl FnOnce(&mut T) -> (R, bool)) -> (R, u64) {
+        unimplemented!()
+    }
+
 }
 
-#[derive(Clone)]
-pub struct State<T: Clone> {
-    cache: T,
-    commit: u64,
-    inner: Arc<StateInner<T>>,
-}
+/// This is the common Interface for all States to access their values
+///
+pub trait State<T> {
+    /// Returns the Unique StateID of this State
+    fn get_id(&self) -> StateID;
 
-impl<T: 'static + Clone + Send + Sync> State<T> {
-    pub fn new(value: T) -> Self {
-        let state = State{
-            cache: value.clone(),
-            commit: 0,
-            inner: Arc::new(StateInner::new(value)),
-        };
-        MANAGER.lock().unwrap().states.insert(state.id(), state.handle());
-        state
-    }
+    /// Returns the value of the State
+    /// Cached States wont try to update their Values
+    fn with_value<R>(&self, operation: impl FnOnce(&T) -> R) -> R;
 
-    pub fn fetch(&mut self) -> &T {
-        let new_commit = self.inner.commit();
-        if self.commit != new_commit {
-            self.commit = new_commit;
-            self.inner.fetch_value(&mut self.cache);
-        }
-        &self.cache
-    }
-    pub fn read(&self) -> &T {
-        &self.cache
-    }
+    /// returns the value of the State
+    /// Cached State will try to update their Value
+    fn with_fetched_value<R>(&mut self, operation: impl FnOnce(&T) -> R) -> R;
 
-    pub fn id(&self) -> StateID {
-        self.inner.id()
-    }
-
-    pub fn handle(&self) -> Handle {
-        Handle(self.inner.clone() as Arc<dyn HandleInner + Send + Sync>)
-    }
+    /// returns a Key of the fetcht value of the state
+    /// Cached State will try to update their Value
+    fn with_key<R>(&mut self, operation: impl FnOnce(Key<T>) -> R) -> R;
 }
 
 pub(crate) trait HandleInner {
@@ -97,8 +101,9 @@ pub(crate) trait HandleInner {
 
 impl<T: 'static + Clone> HandleInner for StateInner<T> {
     fn update(&self, updater: Box<dyn FnOnce(&mut dyn Any)>) {
-        updater(&mut*self.value.write().unwrap());
-        self.commit.store(self.commit.load(Ordering::SeqCst) + 1, Ordering::SeqCst);
+        self.update_value(|value|{
+            updater(value as &mut dyn Any)
+        });
     }
 
     fn id(&self) -> StateID {

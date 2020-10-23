@@ -1,8 +1,8 @@
-use gui::state::{State, sync_states};
+use gui::state::{CloneState, sync_states};
 use gui::state::key::Key;
 
 fn main() {
-    let mut state1 = State::new(0);
+    let mut state1 = CloneState::new(0);
 
     let _key = Key::new(&mut state1);
 

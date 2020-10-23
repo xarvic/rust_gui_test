@@ -5,6 +5,10 @@ use std::sync::atomic::{AtomicBool, Ordering};
 use std::collections::{VecDeque, HashMap};
 use std::sync::Mutex;
 
+pub(crate) fn insert_state(id: StateID, handle: Handle) {
+    MANAGER.lock().unwrap().states.insert(id, handle);
+}
+
 pub(crate) fn update_state<T: 'static, F: FnOnce(&mut T) + Send + Sync + 'static>(id: StateID, update: F) {
     let update = move|value: &mut dyn Any|{
         if let Some(value) = value.downcast_mut::<T>() {

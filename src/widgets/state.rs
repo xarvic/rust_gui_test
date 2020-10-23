@@ -1,4 +1,4 @@
-use crate::state::{StateID, State};
+use crate::state::{StateID, CloneState};
 use crate::event::{Event, EventResponse};
 use druid_shell::piet::Piet;
 use crate::widgets::widget::Widget;
@@ -52,7 +52,7 @@ impl<T: Clone> Widget<T> for StateWrapper {
     }
 }
 
-fn state<T: Clone + 'static, U: Clone>(state: State<T>, widget: impl Widget<T> + 'static) -> StateWrapper {
+fn state<T: Clone + 'static, U: Clone>(state: CloneState<T>, widget: impl Widget<T> + 'static) -> StateWrapper {
     StateWrapper::Local(
         Box::new(
             StateWidget {
@@ -64,7 +64,7 @@ fn state<T: Clone + 'static, U: Clone>(state: State<T>, widget: impl Widget<T> +
 }
 
 struct StateWidget<T: Clone, W: Widget<T>> {
-    state: State<T>,
+    state: CloneState<T>,
     widget: W,
 }
 

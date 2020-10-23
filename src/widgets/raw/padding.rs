@@ -33,3 +33,21 @@ impl Wrapper for Padding {
         self.1
     }
 }
+
+impl From<f64> for Padding {
+    fn from(side: f64) -> Self {
+        Padding::equal(side)
+    }
+}
+
+impl From<(f64, f64)> for Padding {
+    fn from(pad: (f64, f64)) -> Self {
+        Padding::from_size(pad.into())
+    }
+}
+
+impl From<Size> for Padding {
+    fn from(size: Size) -> Self {
+        Padding::from_size(size)
+    }
+}
