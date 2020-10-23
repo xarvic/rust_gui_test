@@ -75,8 +75,12 @@ impl WidgetGraph {
     pub fn dirty(&self) -> Option<Rect> {
         self.dirty_rect.clone()
     }
+
     pub fn pref_size(&mut self) -> PrefSize {
-        self.pref_size
+        let tree = &mut self.tree;
+        self.data.with_value(|value|{
+            tree.get_pref_size(WidgetContext {}, value)
+        })
     }
 
     pub fn layout(&mut self, size: Size) {

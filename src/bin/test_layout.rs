@@ -69,7 +69,6 @@ fn test_layout(spacing: Spacing, index: u32) -> impl Widget<u32> {
         .child(ColorRect::new(Color::rgb8(180, 0, 0), index + 1))
         .child(
             ColorRect::new(Color::rgb8(60, 0, 150), index + 2)
-                .loosen_size(PrefSize::flexible((150.0, 150.0)))
         )
         .child(ColorRect::new(Color::rgb8(0, 200, 200), index + 3))
         .child(ColorRect::new(Color::rgb8(0, 200, 0), index + 4))
@@ -78,15 +77,16 @@ fn test_layout(spacing: Spacing, index: u32) -> impl Widget<u32> {
 
 fn main() {
     WindowBuilder::new()
+        .keep_min_size()
         .open(
             Container::new(VBox::new(Spacing::Between, 5.0))
-                .child(Label::new("Spacing::Around"))
+                .child(Label::new("Spacing::Around", None))
                 .child(test_layout(Spacing::Around, 10))
-                .child(Label::new("Spacing::Equal"))
+                .child(Label::new("Spacing::Equal", None))
                 .child(test_layout(Spacing::Equal, 20))
-                .child(Label::new("Spacing::Padding"))
+                .child(Label::new("Spacing::Padding", None))
                 .child(test_layout(Spacing::Padding, 30))
-                .child(Label::new("Spacing::Between"))
+                .child(Label::new("Spacing::Between", None))
                 .child(test_layout(Spacing::Between, 40))
             .background(Color::grey8(50), 10.0)
             .padding(20.0)

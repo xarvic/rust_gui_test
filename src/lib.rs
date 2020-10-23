@@ -2,6 +2,8 @@
 #![allow(dead_code)]
 
 pub use druid_shell;
+pub use pool_tree;
+
 
 pub mod widgets;
 pub mod event;

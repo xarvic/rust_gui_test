@@ -4,6 +4,7 @@ pub static GROW_IF_NEEDED: f64 = 0.0000001;
 pub static GROW_NORMAL: f64 = 1.0;
 pub static DONT_GROW: f64 = 0.0;
 
+///
 #[derive(Copy, Clone, PartialEq)]
 pub struct PrefSize {
     pub(crate) min: Size,
@@ -123,6 +124,3 @@ impl PrefSize {
         self.grow.y = DONT_GROW
     }
 }
-
-
-

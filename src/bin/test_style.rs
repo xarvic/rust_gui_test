@@ -36,14 +36,15 @@ fn main() {
 
     style_atlas.hovered = Some(style.clone());
 
-    style.margin = 0.0;
     style.background = None;
+    style.border_brush = Brush::Solid(Color::grey8(120).as_rgba_u32());
 
     style_atlas.pressed = Some(style.clone());
 
     let style_atlas = Arc::new(style_atlas);
 
     WindowBuilder::new()
+        .keep_min_size()
         .open(
             Container::new(HBox::new(Spacing::Right, 5.0))
                 .child(Label::new("Button 1", None))

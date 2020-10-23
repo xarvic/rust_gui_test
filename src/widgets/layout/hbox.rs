@@ -18,7 +18,6 @@ impl Default for HBox{
             padding: 10.0,
         }
     }
-
 }
 
 impl HBox {
@@ -181,7 +180,7 @@ impl Layout for HBox {
                 );
 
             child.size = child_size;
-            child.offset = Vec2::new(next_x, 0.0);
+            child.offset = Vec2::new(next_x, (size.height - child_size.height) / 2.0);
             next_x += child_size.width + padding;
         });
     }

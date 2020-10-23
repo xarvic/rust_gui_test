@@ -7,23 +7,26 @@ use crate::state::{sync_states, StateID};
 use crate::event::Event;
 use std::sync::mpsc::{Receiver, sync_channel};
 use crate::widgets::Widget;
+use crate::size::PrefSize;
 
 struct Window{
     widgets: WidgetGraph,
     window_handle: Option<WindowHandle>,
     mouse_focus: bool,
-    scale_to_widgets_min_size: bool,
+    min_size: MinSize,
+    title: String,
     change_queue: Receiver<StateID>,
     size: Size,
 }
 
 impl Window {
-    pub fn new(size: Size, widget: impl Widget<u32> + 'static, change_queue: Receiver<StateID>) -> Self {
+    pub fn new(size: Size, widget: impl Widget<u32> + 'static, change_queue: Receiver<StateID>, min_size: MinSize, title: String) -> Self {
         Window {
             widgets: WidgetGraph::new(widget),
             window_handle: None,
             mouse_focus: false,
-            scale_to_widgets_min_size: false,
+            min_size,
+            title,
             change_queue,
             size
         }
@@ -49,15 +52,16 @@ impl Window {
 
         self.update_states();
     }
+    fn widgets_pref_size(&mut self) -> PrefSize {
+        self.widgets.pref_size()
+    }
 }
 
 impl WinHandler for Window {
     fn connect(&mut self, handle: &WindowHandle) {
-        println!("Opened Window!");
         self.window_handle = Some(handle.clone());
-
         handle.show();
-
+        println!("Opened Window '{}'!", self.title);
         self.update_states();
     }
 
@@ -108,37 +112,73 @@ impl WinHandler for Window {
     }
 }
 
+#[derive(Copy, Clone)]
+pub enum MinSize {
+    Fixed(Size),
+    WidgetsMinSize,
+}
+
 pub struct WindowBuilder {
     size: Size,
     title: String,
+    min_size: MinSize,
 }
 
 impl WindowBuilder {
     pub fn new() -> Self {
         WindowBuilder {
             size: Size::new(640.0, 480.0),
-            title: "App".to_string()
+            title: "App".to_string(),
+            min_size: MinSize::Fixed(Size::ZERO),
         }
-    }
-    pub fn size(mut self, size: Size) -> Self {
-        self.size = size;
-        self
     }
     pub fn title(mut self, title: impl Into<String>) -> Self {
         self.title = title.into();
         self
     }
+    pub fn keep_min_size(mut self) -> Self {
+        self.min_size = MinSize::WidgetsMinSize;
+        self
+    }
+    pub fn keep_fixed_min_size(mut self, size: Size) -> Self {
+        self.min_size = MinSize::Fixed(size);
+        self
+    }
+
     pub fn open<W: Widget<u32> + 'static>(self, widget: W) {
-        println!("open window '{}'", &self.title);
+        println!("create window '{}'", &self.title);
+
+        //Configure Widgets
+
         let app = Application::new().unwrap();
 
         let (sender, reciever) = sync_channel(100);
 
-        let handler = Window::new(self.size, widget, reciever);
+        let mut handler = Window::new(self.size,
+                                      widget,
+                                      reciever,
+                                      self.min_size.clone(),
+                                      self.title.clone());
+
+        let pref_size = handler.widgets_pref_size();
+
+        let min_size = match &self.min_size {
+            MinSize::Fixed(size) => size.clone(),
+            MinSize::WidgetsMinSize => Size::new(pref_size.min.width + 20.0,
+                                                 pref_size.min.height + 20.0),
+            //TODO: change this to pref_size.min when we can change the min size of an existing Window
+            //This works since most Windows dont change their pref_size much
+        };
+
+        println!("min size: {}!", pref_size.min);
+
+        //Create Platform Window
 
         let mut window = druid_shell::WindowBuilder::new(app.clone());
-        window.set_size(self.size);
+        window.set_size(pref_size.max);
         window.resizable(true);
+        window.set_title(self.title);
+        window.set_min_size(min_size);
         window.set_handler(Box::new(handler));
         window.build().unwrap();
 
