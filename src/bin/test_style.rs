@@ -37,7 +37,7 @@ fn main() {
     style_atlas.hovered = Some(style.clone());
 
     style.background = None;
-    style.border_brush = Brush::Solid(Color::grey8(120).as_rgba_u32());
+    style.border_brush = Brush::Solid(Color::grey8(160).as_rgba_u32());
 
     style_atlas.pressed = Some(style.clone());
 
