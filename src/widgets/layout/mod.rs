@@ -2,9 +2,13 @@ mod hbox;
 mod container;
 mod list_container;
 mod vbox;
+
 pub use hbox::HBox;
 pub use vbox::VBox;
 pub use container::Container;
+
+pub use axis_layout::{AxisSize, XAxisSize, YAxisSize, PrefAxisSize, XAxisPrefSize, YAxisPrefSize,
+                        AxisWidgetList};
 
 use druid_shell::kurbo::{Vec2, Size};
 use crate::size::PrefSize;

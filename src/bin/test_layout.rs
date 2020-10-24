@@ -88,7 +88,6 @@ fn main() {
                 .child(test_layout(Spacing::Padding, 30))
                 .child(Label::new("Spacing::Between", None))
                 .child(test_layout(Spacing::Between, 40))
-            .background(Color::grey8(50), 10.0)
             .padding(20.0)
         )
 }

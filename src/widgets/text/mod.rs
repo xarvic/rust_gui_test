@@ -5,6 +5,15 @@ use crate::event::{Event, EventResponse};
 use druid_shell::piet::{Piet, RenderContext, PietTextLayout, FontBuilder, Text, TextLayout, Color, TextLayoutBuilder, PietText, PietFont};
 use crate::state::key::Key;
 use crate::size::PrefSize;
+use crate::widgets::widget::IntoWidget;
+
+impl<T> IntoWidget<T> for String {
+    type Widget = Label;
+
+    fn into_widget(self) -> Self::Widget {
+        Label::new(self, None)
+    }
+}
 
 pub struct Label {
     text: String,

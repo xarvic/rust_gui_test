@@ -7,7 +7,8 @@ mod state;
 mod lens;
 mod widget;
 mod empty;
+mod button;
 
-pub use widget::{Widget, WidgetCompose};
+pub use widget::{Widget, WidgetCompose, IntoWidget};
 pub use state::{fixed, StateWrapper, StateRootWidget};
 pub use empty::Empty;

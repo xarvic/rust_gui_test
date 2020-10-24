@@ -25,10 +25,12 @@ fn main() {
         padding: 4.0,
         border: 2.0,
         border_style: StrokeStyle::new(),
-        border_brush: Brush::Solid(Color::grey8(80).as_rgba_u32()),
+        border_brush: Brush::Solid(Color::grey8(200).as_rgba_u32()),
         background: Some(Background::from_color(Color::grey8(70))),
         corners: 4.0
     };
+
+    style.border_style.set_dash(vec![5.0, 3.0], 0.0);
 
     let mut style_atlas = StyleAtlas::new(style.clone());
 
@@ -46,14 +48,13 @@ fn main() {
     WindowBuilder::new()
         .keep_min_size()
         .open(
-            Container::new(HBox::new(Spacing::Right, 5.0))
+            Container::new(HBox::new(Spacing::Equal, 5.0))
                 .child(Label::new("Button 1", None))
                 .child(button(&style_atlas, "test 123", |_, mut key: Key<u32>|{
                     key.change(|value|*value += 1)
                 }))
                 .child(Label::new("Button 2", None))
                 .child(button(&style_atlas, "ABC", |_, _|println!("Clicked 2!")))
-                .background(Color::grey8(50), 10.0)
-                .padding(20.0)
+                .padding(2.0)
         )
 }

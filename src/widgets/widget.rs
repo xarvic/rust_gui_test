@@ -45,3 +45,9 @@ pub trait WidgetCompose<T: Clone>: Widget<T> where Self: Sized {
         PrefSizeWrapper::new(self, pref, false, false, true)
     }
 }
+
+pub trait IntoWidget<T> {
+    type Widget: Widget<T>;
+
+    fn into_widget(self) -> Self::Widget;
+}

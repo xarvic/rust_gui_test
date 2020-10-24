@@ -1,5 +1,5 @@
 use druid_shell::{WinHandler, WindowHandle, MouseEvent, Application};
-use druid_shell::piet::Piet;
+use druid_shell::piet::{Piet, Color, RenderContext};
 use std::any::Any;
 use druid_shell::kurbo::{Size, Rect};
 use crate::widget_graph::WidgetGraph;
@@ -73,6 +73,7 @@ impl WinHandler for Window {
     }
 
     fn paint(&mut self, piet: &mut Piet, invalid_rect: Rect) -> bool {
+        piet.clear(Color::rgba8(0,0,0,0));
         self.widgets.draw_widgets(piet, self.size, invalid_rect)
     }
 
