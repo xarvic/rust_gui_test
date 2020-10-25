@@ -1,14 +1,14 @@
-use gui::state::{CloneState, sync_states};
-use gui::state::key::Key;
+use gui::window::WindowBuilder;
+use gui::widgets::layout::{Container, HBox, Spacing};
+use gui::widgets::button;
+use gui::widgets::text::Label;
 
 fn main() {
-    let mut state1 = CloneState::new(0);
-
-    let _key = Key::new(&mut state1);
-
-
-
-    sync_states();
-
-    println!("state: {}", *state1.fetch());
+    WindowBuilder::new()
+        .keep_min_size()
+        .title("test states")
+        .open(Container::new(HBox::new(Spacing::Around, 0.0))
+            .child(Label::new("button:", None))
+            .child(button("Hi", None, |_, _|println!("hi")))
+        )
 }

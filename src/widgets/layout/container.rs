@@ -1,5 +1,5 @@
 use crate::widgets::layout::{WidgetList, ChildMeta, Layout};
-use crate::widgets::Widget;
+use crate::widgets::{Widget, IntoWidget};
 use crate::event::{Event, EventResponse};
 use crate::widget_graph::WidgetContext;
 use crate::state::key::Key;

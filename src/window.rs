@@ -1,5 +1,5 @@
 use druid_shell::{WinHandler, WindowHandle, MouseEvent, Application};
-use druid_shell::piet::{Piet, Color, RenderContext};
+use druid_shell::piet::Piet;
 use std::any::Any;
 use druid_shell::kurbo::{Size, Rect};
 use crate::widget_graph::WidgetGraph;
@@ -73,7 +73,6 @@ impl WinHandler for Window {
     }
 
     fn paint(&mut self, piet: &mut Piet, invalid_rect: Rect) -> bool {
-        piet.clear(Color::rgba8(0,0,0,0));
         self.widgets.draw_widgets(piet, self.size, invalid_rect)
     }
 
@@ -176,10 +175,10 @@ impl WindowBuilder {
         //Create Platform Window
 
         let mut window = druid_shell::WindowBuilder::new(app.clone());
-        window.set_size(pref_size.max);
+        window.set_size(Size::new(pref_size.max.width.max(200.0), pref_size.max.width.max(150.0)));
         window.resizable(true);
         window.set_title(self.title);
-        window.set_min_size(min_size);
+        window.set_min_size(Size::new(min_size.width.max(180.0), min_size.width.max(50.0)));
         window.set_handler(Box::new(handler));
         window.build().unwrap();
 

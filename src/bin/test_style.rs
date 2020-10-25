@@ -2,9 +2,9 @@ use gui::window::WindowBuilder;
 use gui::widgets::layout::{Container, Spacing, HBox};
 use gui::widgets::text::Label;
 use gui::widgets::{WidgetCompose, Widget};
-use gui::widgets::style::{StyleAtlas, Style, DynamicStyle, Background};
+use gui::widgets::style::{StyleAtlas, Style, DynamicStyle, Background, Fill};
 use std::sync::Arc;
-use druid_shell::piet::{Brush, StrokeStyle, Color};
+use druid_shell::piet::{StrokeStyle, Color};
 use gui::widgets::raw::{WrapperWidget, click_listener};
 use gui::state::key::Key;
 use druid_shell::MouseEvent;
@@ -25,12 +25,10 @@ fn main() {
         padding: 4.0,
         border: 2.0,
         border_style: StrokeStyle::new(),
-        border_brush: Brush::Solid(Color::grey8(200).as_rgba_u32()),
+        border_fill: Fill::Solid(Color::grey8(200)),
         background: Some(Background::from_color(Color::grey8(70))),
         corners: 4.0
     };
-
-    style.border_style.set_dash(vec![5.0, 3.0], 0.0);
 
     let mut style_atlas = StyleAtlas::new(style.clone());
 

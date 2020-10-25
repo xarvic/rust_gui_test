@@ -46,7 +46,7 @@ pub trait WidgetCompose<T: Clone>: Widget<T> where Self: Sized {
     }
 }
 
-pub trait IntoWidget<T> {
+pub trait IntoWidget<T: Clone> {
     type Widget: Widget<T>;
 
     fn into_widget(self) -> Self::Widget;

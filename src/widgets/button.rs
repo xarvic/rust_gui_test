@@ -1,21 +1,13 @@
-use crate::widgets::style::{StyleAtlas, DynamicStyle};
+use crate::widgets::style::{StyleAtlas, DynamicStyle, get_style};
 use std::sync::Arc;
 use druid_shell::MouseEvent;
 use crate::state::key::Key;
 use crate::widgets::{Widget, WidgetCompose, IntoWidget};
 use crate::widgets::raw::click_listener;
 
-pub fn button<T: Clone>(widget: impl IntoWidget<T>, style: Arc<StyleAtlas>, handler: impl FnMut(MouseEvent, Key<T>)) -> impl Widget<T> {
+pub fn button<T: Clone>(widget: impl IntoWidget<T>, style: impl Into<Option<Arc<StyleAtlas>>>, handler: impl FnMut(MouseEvent, Key<T>)) -> impl Widget<T> {
     click_listener(
-        widget.wrap(DynamicStyle::new(style, true)),
+        widget.into_widget().wrap(DynamicStyle::new(style.into().unwrap_or(get_style("button")), true)),
         handler
     )
-}
-
-pub fn button_group<T: Clone + PartialEq>(my_value: T, widget: impl IntoWidget<T>, style: Arc<StyleAtlas>) -> impl Widget<T> {
-    unimplemented!()
-}
-
-pub fn toggle_button(widget: impl IntoWidget<bool>, style: Arc<StyleAtlas>) -> impl Widget<bool> {
-    unimplemented!()
 }

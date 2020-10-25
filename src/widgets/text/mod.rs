@@ -7,11 +7,19 @@ use crate::state::key::Key;
 use crate::size::PrefSize;
 use crate::widgets::widget::IntoWidget;
 
-impl<T> IntoWidget<T> for String {
+impl<T: Clone> IntoWidget<T> for String {
     type Widget = Label;
 
     fn into_widget(self) -> Self::Widget {
         Label::new(self, None)
+    }
+}
+
+impl<T: Clone> IntoWidget<T> for &str {
+    type Widget = Label;
+
+    fn into_widget(self) -> Self::Widget {
+        Label::new(self.to_string(), None)
     }
 }
 

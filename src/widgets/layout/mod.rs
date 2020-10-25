@@ -7,9 +7,6 @@ pub use hbox::HBox;
 pub use vbox::VBox;
 pub use container::Container;
 
-pub use axis_layout::{AxisSize, XAxisSize, YAxisSize, PrefAxisSize, XAxisPrefSize, YAxisPrefSize,
-                        AxisWidgetList};
-
 use druid_shell::kurbo::{Vec2, Size};
 use crate::size::PrefSize;
 
