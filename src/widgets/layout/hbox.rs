@@ -6,16 +6,20 @@ pub struct HBox{
     inner: PrefSize,
     spacing: Spacing,
     children: u32,
-    padding: f64,
+    start_padding: f64,
+    mid_padding: f64,
+    end_padding: f64,
 }
 
 impl Default for HBox{
     fn default() -> Self {
         HBox{
             inner: PrefSize::zero(),
-            spacing: Spacing::Left,
+            spacing: Spacing::Equal,
             children: 0,
-            padding: 10.0,
+            start_padding: 10.0,
+            mid_padding: 10.0,
+            end_padding: 10.0,
         }
     }
 }
@@ -26,49 +30,35 @@ impl HBox {
             inner: PrefSize::zero(),
             children: 0,
             spacing,
-            padding,
+            start_padding: padding,
+            mid_padding: padding,
+            end_padding: padding,
+        }
+    }
+    pub fn start_middle_end(spacing: Spacing, start: f64, middle: f64, end: f64) -> Self {
+        HBox {
+            inner: PrefSize::zero(),
+            children: 0,
+            spacing,
+            start_padding: start,
+            mid_padding: middle,
+            end_padding: end,
         }
     }
     fn with_const_padding(&self) -> PrefSize {
-        if self.children == 0 {
-            PrefSize::zero()
-        } else {
-            let const_padding = self.const_padding();
-            let mut pref_size = self.inner;
-            pref_size.min.width += const_padding;
-            pref_size.max.width += const_padding;
-            pref_size.set_grow_x();
-            pref_size
-        }
+        let const_padding = self.const_padding();
+        let mut pref_size = self.inner;
+        pref_size.min.width += const_padding;
+        pref_size.max.width += const_padding;
+        pref_size.set_grow_x();
+        pref_size
     }
     fn const_padding(&self) -> f64 {
-        (match self.spacing {
-            Spacing::Equal => self.children + 1,
-            Spacing::Around => 2,
-            Spacing::Between => self.children - 1,
-            Spacing::Padding => self.children,
-            Spacing::Left | Spacing::Right => 1,
-        }) as f64 * self.padding
-    }
-    fn start_padding(&self) -> f64 {
-        (match self.spacing {
-            Spacing::Equal => 1.0,
-            Spacing::Around => 1.0,
-            Spacing::Between => 0.0,
-            Spacing::Padding => 0.5,
-            Spacing::Left => 1.0,
-            Spacing::Right => 0.0,
-        }) * self.padding
-    }
-    fn middle_padding(&self) -> f64 {
-        (match self.spacing {
-            Spacing::Equal => 1.0,
-            Spacing::Around => 0.0,
-            Spacing::Between => 1.0,
-            Spacing::Padding => 1.0,
-            Spacing::Left => 0.0,
-            Spacing::Right => 0.0,
-        }) * self.padding
+        if self.children > 0 {
+            self.start_padding + self.mid_padding * ((self.children - 1) as f64) + self.end_padding
+        } else {
+            0.0
+        }
     }
 }
 
@@ -159,8 +149,8 @@ impl Layout for HBox {
             }
         };
 
-        padding += self.middle_padding();
-        next_x += self.start_padding();
+        padding += self.mid_padding;
+        next_x += self.start_padding;
 
 
         widgets.iter_inner_mut(|child| {

@@ -35,7 +35,11 @@ impl PrefSize {
     }
 
     pub fn flexible(size: impl Into<Size>) -> Self {
-        Self::min_max(Size::ZERO, size)
+        Self::new(Size::ZERO, size, Vec2::new(GROW_IF_NEEDED, GROW_IF_NEEDED))
+    }
+
+    pub fn zero() -> Self {
+        Self::fixed(Size::ZERO)
     }
 
     pub fn growing(mut self) -> Self {
@@ -50,9 +54,6 @@ impl PrefSize {
         self
     }
 
-    pub fn zero() -> Self {
-        Self::fixed(Size::ZERO)
-    }
 
     pub fn row(&mut self, other: Self) {
         self.min.width += other.min.width;

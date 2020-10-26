@@ -1,5 +1,5 @@
 use crate::widgets::layout::{WidgetList, ChildMeta, Layout};
-use crate::widgets::{Widget, IntoWidget};
+use crate::widgets::Widget;
 use crate::event::{Event, EventResponse};
 use crate::widget_graph::WidgetContext;
 use crate::state::key::Key;
@@ -62,7 +62,7 @@ impl<T: Clone, L: Layout> Container<T, L> where L::Constrain: Default {
 }
 
 impl<T: Clone + 'static, L: Layout> Widget<T> for Container<T, L> {
-    fn draw(&mut self, painter: &mut Piet, size: Size, dirty_rect: Rect, context: WidgetContext, data: &T) {
+    fn draw(&mut self, painter: &mut Piet, size: Size, dirty_rect: Rect, mut context: WidgetContext, data: &T) {
         for (child, meta) in self.widgets.iter_mut() {
             let child_dirty_rect = Rect::new(dirty_rect.x0 - meta.offset.x,
                                              dirty_rect.y0 - meta.offset.y,
@@ -80,7 +80,7 @@ impl<T: Clone + 'static, L: Layout> Widget<T> for Container<T, L> {
         }
     }
 
-    fn handle_event(&mut self, mut event: Event, context: WidgetContext, mut data: Key<T>) -> EventResponse{
+    fn handle_event(&mut self, mut event: Event, mut context: WidgetContext, mut data: Key<T>) -> EventResponse{
         let mut response = EventResponse::NONE;
 
         if let Some(me) = event.mouse_event() {
@@ -123,14 +123,14 @@ impl<T: Clone + 'static, L: Layout> Widget<T> for Container<T, L> {
         response
     }
 
-    fn get_pref_size(&mut self, context: WidgetContext, data: &T) -> PrefSize {
+    fn get_pref_size(&mut self, mut context: WidgetContext, data: &T) -> PrefSize {
         for (child, meta) in self.widgets.iter_mut() {
             meta.pref = child.get_pref_size(context.id(), data);
         }
         self.layout.calc_pref_size(&self.widgets)
     }
 
-    fn layout(&mut self, size: Size, context: WidgetContext, data: &T) {
+    fn layout(&mut self, size: Size, mut context: WidgetContext, data: &T) {
         self.layout.layout(size, &mut self.widgets);
         for (child, meta) in self.widgets.iter_mut() {
             meta.size = meta.size.expand();
@@ -139,12 +139,12 @@ impl<T: Clone + 'static, L: Layout> Widget<T> for Container<T, L> {
         }
     }
 
-    fn build(&mut self, context: WidgetContext) {
+    fn build(&mut self, mut context: WidgetContext) {
         for (child, _) in self.widgets.iter_mut() {
             child.build(context.id())
         }
     }
-    fn traverse_focus(&mut self, context: WidgetContext) -> bool {
+    fn traverse_focus(&mut self, mut context: WidgetContext) -> bool {
         let index = self.focus.map_or(0, |index|index as usize);
 
         for (index, (child, _)) in self.widgets.iter_mut().enumerate().skip(index) {

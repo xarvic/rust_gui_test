@@ -1,61 +1,80 @@
-use crate::state::{StateID, CloneState};
+use crate::state::{StateID, CloneState, State};
 use crate::event::{Event, EventResponse};
 use druid_shell::piet::Piet;
 use crate::widgets::widget::Widget;
 use druid_shell::kurbo::{Size, Rect};
 use crate::state::key::Key;
-use crate::widget_graph::WidgetContext;
-use std::any::Any;
+use crate::widget_graph::{WidgetContext, StateRoot, Env};
 use crate::size::PrefSize;
+use pool_tree::child_unique::ChildUniq;
+use std::mem::replace;
 
-pub trait StateRootWidget {
+///
+pub trait StateWidget {
     fn update(&mut self) -> bool;
-    fn draw(&self, painter: &mut Piet, context: WidgetContext);
-    fn handle_event(&mut self, event: Event, context: WidgetContext);
-    fn get_pref_size(&self, context: WidgetContext) -> PrefSize;
+    fn draw(&mut self, painter: &mut Piet, size: Size, dirty_rect: Rect, context: WidgetContext);
+    fn handle_event(&mut self, event: Event, context: WidgetContext) -> EventResponse;
+    fn get_pref_size(&mut self, context: WidgetContext) -> PrefSize;
     fn layout(&mut self, size: Size, context: WidgetContext);
     fn build(&mut self, context: WidgetContext);
     fn traverse_focus(&mut self, context: WidgetContext) -> bool;
 
-    fn states(&self) -> &[StateID];
+    fn states(&self) -> StateID;
 }
 
 pub enum StateWrapper{
     Tree(u32),
-    Local(Box<dyn Any>),//TODO: change to dyn StateRootWidget
+    Local(Box<dyn StateWidget>),
+}
+
+impl StateWrapper{
+    fn as_child<R>(&mut self, mut context: WidgetContext, operation: impl FnOnce(ChildUniq<StateRoot>, Env) -> R) -> R {
+        match replace(self, StateWrapper::Tree(0)) {
+            StateWrapper::Tree(index) => {
+                *self = StateWrapper::Tree(index);
+                let (a, b) = context.get_child(index);
+                operation(a, b)
+            }
+            StateWrapper::Local(value) => {
+                let (a, b, c) = context.insert(StateRoot::new(value));
+                *self = StateWrapper::Tree(c);
+                operation(a, b)
+            }
+        }
+    }
 }
 
 
 impl<T: Clone> Widget<T> for StateWrapper {
     fn draw(&mut self, painter: &mut Piet, size: Size, dirty_rect: Rect, context: WidgetContext, data: &T) {
-        unimplemented!()
+        self.as_child(context, move|child, env|child.draw(painter, size, dirty_rect, env))
     }
 
     fn handle_event(&mut self, event: Event, context: WidgetContext, data: Key<T>) -> EventResponse {
-        unimplemented!()
+        self.as_child(context, move|child, env|child.handle_event(event, env))
     }
 
     fn get_pref_size(&mut self, context: WidgetContext, data: &T) -> PrefSize {
-        unimplemented!()
+        self.as_child(context, move|child, env|child.get_pref_size(env))
     }
 
     fn layout(&mut self, size: Size, context: WidgetContext, data: &T) {
-        unimplemented!()
+        self.as_child(context, move|child, env|child.layout(size, env))
     }
 
     fn build(&mut self, context: WidgetContext) {
-        unimplemented!()
+        self.as_child(context, move|child, env|child.build(env))
     }
 
     fn traverse_focus(&mut self, context: WidgetContext) -> bool {
-        unimplemented!()
+        self.as_child(context, move|child, env|child.traverse_focus(env))
     }
 }
 
-fn state<T: Clone + 'static, U: Clone>(state: CloneState<T>, widget: impl Widget<T> + 'static) -> StateWrapper {
+pub fn state<T: Clone + Send + Sync + 'static>(state: CloneState<T>, widget: impl Widget<T> + 'static) -> StateWrapper {
     StateWrapper::Local(
         Box::new(
-            StateWidget {
+            StateWidgetImpl {
                 state,
                 widget,
             }
@@ -63,46 +82,59 @@ fn state<T: Clone + 'static, U: Clone>(state: CloneState<T>, widget: impl Widget
     )
 }
 
-struct StateWidget<T: Clone, W: Widget<T>> {
+pub(crate) struct StateWidgetImpl<T: Clone, W: Widget<T>> {
     state: CloneState<T>,
     widget: W,
 }
 
-impl<T: Clone, W: Widget<T>> StateRootWidget for StateWidget<T, W> {
+impl<T: Clone + Send + Sync + 'static, W: Widget<T>> StateWidgetImpl<T, W> {
+    pub(crate) fn new(state: CloneState<T>, widget: W) -> Self {
+        StateWidgetImpl {
+            state,
+            widget,
+        }
+    }
+}
+
+impl<T: Clone + Send + Sync + 'static, W: Widget<T>> StateWidget for StateWidgetImpl<T, W> {
     fn update(&mut self) -> bool {
         unimplemented!()
     }
 
-    fn draw(&self, painter: &mut Piet, context: WidgetContext) {
-        unimplemented!()
+    fn draw(&mut self, painter: &mut Piet, size: Size, dirty_rect: Rect, context: WidgetContext) {
+        let widget = &mut self.widget;
+        self.state.with_value(|value|widget.draw(painter, size, dirty_rect, context, value))
     }
 
-    fn handle_event(&mut self, event: Event, context: WidgetContext) {
-        unimplemented!()
+    fn handle_event(&mut self, event: Event, context: WidgetContext) -> EventResponse{
+        let widget = &mut self.widget;
+        self.state.with_key(|value|widget.handle_event(event, context, value))
     }
 
-    fn get_pref_size(&self, context: WidgetContext) -> PrefSize {
-        unimplemented!()
+    fn get_pref_size(&mut self, context: WidgetContext) -> PrefSize {
+        let widget = &mut self.widget;
+        self.state.with_value(|value|widget.get_pref_size(context, value))
     }
 
     fn layout(&mut self, size: Size, context: WidgetContext) {
-        unimplemented!()
+        let widget = &mut self.widget;
+        self.state.with_value(|value|widget.layout(size, context, value))
     }
 
     fn build(&mut self, context: WidgetContext) {
-        unimplemented!()
+        self.widget.build(context)
     }
 
     fn traverse_focus(&mut self, context: WidgetContext) -> bool {
-        unimplemented!()
+        self.widget.traverse_focus(context)
     }
 
-    fn states(&self) -> &[StateID] {
-        unimplemented!()
+    fn states(&self) -> StateID {
+        self.state.get_id()
     }
 }
 
-pub fn fixed<T: Clone + 'static, U: Clone>(data: T, widget: impl Widget<T> + 'static) -> StateWrapper {
+/*pub fn fixed<T: Clone + 'static, U: Clone>(data: T, widget: impl Widget<T> + 'static) -> StateWrapper {
     StateWrapper::Local(
         Box::new(
             StaticWidget{
@@ -116,4 +148,4 @@ pub fn fixed<T: Clone + 'static, U: Clone>(data: T, widget: impl Widget<T> + 'st
 struct StaticWidget<T: Clone, W: Widget<T>> {
     data: T,
     widget: W,
-}
+}*/

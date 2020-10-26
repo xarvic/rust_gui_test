@@ -1,4 +1,3 @@
-use crate::state::manager::insert_state;
 use crate::state::{Handle, HandleInner, StateInner, StateID, State};
 use std::sync::Arc;
 use crate::state::key::Key;
@@ -18,7 +17,6 @@ impl<T: 'static + Clone + Send + Sync> CloneState<T> {
             commit: 0,
             inner: Arc::new(StateInner::new(value)),
         };
-        insert_state(state.inner.id, state.handle());
         state
     }
 

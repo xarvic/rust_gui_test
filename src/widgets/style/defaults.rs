@@ -22,21 +22,21 @@ static STYLES: Lazy<(HashMap<String, Arc<StyleAtlas>>, Arc<StyleAtlas>)> = Lazy:
     let mut style = Style{
         margin: 0.0,
         padding: 4.0,
-        border: 2.0,
+        border: 1.0,
         border_style: StrokeStyle::new(),
-        border_fill: Fill::Solid(Color::grey8(80)),
-        background: Some(Background::from_color(Color::grey8(70))),
-        corners: 4.0
+        border_fill: Fill::Solid(Color::grey8(100)),
+        background: Some(Background::from_color(Color::grey8(80))),
+        corners: 6.0
     };
 
     let mut style_atlas = StyleAtlas::new(style.clone());
 
-    style.background = Some(Background::from_color(Color::grey8(80)));
+    style.background = Some(Background::from_color(Color::grey8(100)));
 
     style_atlas.hovered = Some(style.clone());
 
     style.background = None;
-    style.border_fill = Fill::Solid(Color::grey8(100));
+    style.border_fill = Fill::Solid(Color::grey8(200));
 
     style_atlas.pressed = Some(style.clone());
 

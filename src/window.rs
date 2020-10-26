@@ -1,11 +1,11 @@
-use druid_shell::{WinHandler, WindowHandle, MouseEvent, Application};
+use druid_shell::{WinHandler, WindowHandle, MouseEvent, Application, IdleToken};
 use druid_shell::piet::Piet;
 use std::any::Any;
 use druid_shell::kurbo::{Size, Rect};
 use crate::widget_graph::WidgetGraph;
-use crate::state::{sync_states, StateID};
+use crate::state::{StateID, register_listener};
 use crate::event::Event;
-use std::sync::mpsc::{Receiver, sync_channel};
+use std::sync::mpsc::Receiver;
 use crate::widgets::Widget;
 use crate::size::PrefSize;
 
@@ -15,27 +15,28 @@ struct Window{
     mouse_focus: bool,
     min_size: MinSize,
     title: String,
-    change_queue: Receiver<StateID>,
+    change_queue: Option<Receiver<StateID>>,
     size: Size,
 }
 
 impl Window {
-    pub fn new(size: Size, widget: impl Widget<u32> + 'static, change_queue: Receiver<StateID>, min_size: MinSize, title: String) -> Self {
+    pub fn new(size: Size, widget: impl Widget<()> + 'static, min_size: MinSize, title: String) -> Self {
         Window {
             widgets: WidgetGraph::new(widget),
             window_handle: None,
             mouse_focus: false,
             min_size,
             title,
-            change_queue,
+            change_queue: None,
             size
         }
     }
 
     fn update_states(&mut self) {
-        sync_states();
-        let changes: Vec<_> = self.change_queue.try_iter().collect();
-        self.widgets.update(&changes);
+        if let Some(changes) = self.change_queue.as_ref() {
+            let changes= changes.try_iter().collect::<Vec<_>>();
+            self.widgets.update(&changes);
+        }
         self.update_widgets();
     }
 
@@ -61,7 +62,18 @@ impl WinHandler for Window {
     fn connect(&mut self, handle: &WindowHandle) {
         self.window_handle = Some(handle.clone());
         handle.show();
-        println!("Opened Window '{}'!", self.title);
+
+        {
+            let handle = handle.clone();
+
+            let (listener, id) = register_listener(Some(Box::new(move|| {
+                handle.get_idle_handle().unwrap().schedule_idle(IdleToken::new(0))
+            })));
+            self.change_queue = Some(listener);
+
+        }
+
+        println!("opened window '{}'", self.title);
         self.update_states();
     }
 
@@ -106,10 +118,14 @@ impl WinHandler for Window {
             self.mouse_focus = false;
         }
     }
+    fn idle(&mut self, token: IdleToken) {
+        self.update_states()
+    }
 
     fn as_any(&mut self) -> &mut dyn Any {
         self
     }
+
 }
 
 #[derive(Copy, Clone)]
@@ -145,18 +161,15 @@ impl WindowBuilder {
         self
     }
 
-    pub fn open<W: Widget<u32> + 'static>(self, widget: W) {
+    pub fn open<W: Widget<()> + 'static>(self, widget: W) {
         println!("create window '{}'", &self.title);
 
         //Configure Widgets
 
         let app = Application::new().unwrap();
 
-        let (sender, reciever) = sync_channel(100);
-
         let mut handler = Window::new(self.size,
                                       widget,
-                                      reciever,
                                       self.min_size.clone(),
                                       self.title.clone());
 
@@ -170,15 +183,13 @@ impl WindowBuilder {
             //This works since most Windows dont change their pref_size much
         };
 
-        println!("min size: {}!", pref_size.min);
-
         //Create Platform Window
 
         let mut window = druid_shell::WindowBuilder::new(app.clone());
         window.set_size(Size::new(pref_size.max.width.max(200.0), pref_size.max.width.max(150.0)));
         window.resizable(true);
         window.set_title(self.title);
-        window.set_min_size(Size::new(min_size.width.max(180.0), min_size.width.max(50.0)));
+        window.set_min_size(Size::new(min_size.width.max(150.0), min_size.height.max(50.0)));
         window.set_handler(Box::new(handler));
         window.build().unwrap();
 

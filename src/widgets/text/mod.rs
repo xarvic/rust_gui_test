@@ -6,6 +6,7 @@ use druid_shell::piet::{Piet, RenderContext, PietTextLayout, FontBuilder, Text, 
 use crate::state::key::Key;
 use crate::size::PrefSize;
 use crate::widgets::widget::IntoWidget;
+use std::marker::PhantomData;
 
 impl<T: Clone> IntoWidget<T> for String {
     type Widget = Label;
@@ -43,8 +44,8 @@ impl Label {
     pub fn set_text(&mut self) -> &mut String {
         &mut self.text
     }
-    pub fn layout(&mut self) {
-        let layout = PietText::new().new_text_layout(&self.font, &self.text, None).build().unwrap();
+    pub fn recalc_text(&mut self) {
+        self.layout = PietText::new().new_text_layout(&self.font, &self.text, None).build().unwrap();
     }
 }
 
@@ -71,8 +72,47 @@ impl<T: Clone> Widget<T> for Label {
     }
 }
 
-struct DynLabel<F> {
+pub struct DynLabel<T, F> {
     label: Label,
     update: F,
     size: Size,
+    phantop: PhantomData<T>,
+}
+
+impl<T: Clone, F: Fn(&T) -> String> DynLabel<T, F> {
+    pub fn new(update: F) -> Self {
+        DynLabel{
+            label: Label::new("", None),
+            update,
+            size: Size::ZERO,
+            phantop: PhantomData,
+        }
+    }
+}
+
+impl<T: Clone, F: Fn(&T) -> String> Widget<T> for DynLabel<T, F> {
+    fn draw(&mut self, painter: &mut Piet, size: Size, dirty_rect: Rect, context: WidgetContext, data: &T) {
+        self.label.draw(painter, size, dirty_rect, context, data)
+    }
+
+    fn handle_event(&mut self, event: Event, context: WidgetContext, data: Key<T>) -> EventResponse {
+        //TODO: move this to update
+        *self.label.set_text() = (self.update)(&*data);
+        self.label.recalc_text();
+
+        EventResponse::bounds_changed(false)
+    }
+
+    fn get_pref_size(&mut self, context: WidgetContext, data: &T) -> PrefSize {
+        *self.label.set_text() = (self.update)(data);
+        self.label.recalc_text();
+
+        self.label.get_pref_size(context, data)
+    }
+
+    fn layout(&mut self, size: Size, context: WidgetContext, data: &T) {
+        self.size = size;
+    }
+
+    fn build(&mut self, context: WidgetContext) {}
 }

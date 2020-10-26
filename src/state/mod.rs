@@ -9,7 +9,8 @@ mod manager;
 mod clone_state;
 mod sync_state;
 
-pub use manager::sync_states;
+pub use manager::{register_listener, unregister_listener};
+pub(crate) use manager::update;
 pub use clone_state::CloneState;
 
 use std::any::Any;
@@ -60,6 +61,7 @@ impl<T: Clone> StateInner<T> {
     fn update_value<R>(&self, operation: impl FnOnce(&mut T) -> R) -> (R, u64) {
         let r = operation(self.value.write().unwrap().deref_mut());
         let old = self.commit.fetch_add(1, Ordering::SeqCst);
+        update(self.id);
         (r, old + 1)
     }
     /// Executes operation with value. the commit value increases if operation returns true
