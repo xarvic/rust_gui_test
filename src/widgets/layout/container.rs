@@ -1,6 +1,6 @@
 use crate::widgets::layout::{WidgetList, ChildMeta, Layout};
 use crate::widgets::Widget;
-use crate::event::{Event, EventResponse};
+use crate::event::{Event, EventResponse, Change};
 use crate::widget_graph::WidgetContext;
 use crate::state::key::Key;
 use druid_shell::kurbo::{Size, Affine, Rect};
@@ -144,6 +144,15 @@ impl<T: Clone + 'static, L: Layout> Widget<T> for Container<T, L> {
             child.build(context.id())
         }
     }
+
+    fn update(&mut self, new: &T, old: Option<&T>) -> Change {
+        let mut change = Change::None;
+        for (widget, child) in self.widgets.iter_mut() {
+            change = change.merge(widget.update(new, old).shift(child.offset));
+        }
+        change
+    }
+
     fn traverse_focus(&mut self, mut context: WidgetContext) -> bool {
         let index = self.focus.map_or(0, |index|index as usize);
 

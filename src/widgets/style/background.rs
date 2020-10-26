@@ -1,7 +1,7 @@
 use crate::widgets::Widget;
 use druid_shell::piet::{Color, Piet};
 use druid_shell::kurbo::{Rect, Size};
-use crate::event::{EventResponse, Event};
+use crate::event::{EventResponse, Event, Change};
 use crate::widget_graph::WidgetContext;
 use crate::state::key::Key;
 use crate::widgets::style::Background;
@@ -45,6 +45,10 @@ impl<T: Clone, W: Widget<T>> Widget<T> for BackgroundWrapper<W> {
 
     fn build(&mut self, context: WidgetContext) {
         self.widget.build(context)
+    }
+
+    fn update(&mut self, new: &T, old: Option<&T>) -> Change {
+        self.widget.update(new, old)
     }
 
     fn traverse_focus(&mut self, context: WidgetContext) -> bool {

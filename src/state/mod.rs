@@ -89,7 +89,7 @@ pub trait State<T> {
 
     /// returns the value of the State
     /// Cached State will try to update their Value
-    fn with_fetched_value<R>(&mut self, operation: impl FnOnce(&T) -> R) -> R;
+    fn with_fetched_value<R>(&mut self, operation: impl FnOnce(&T, Option<&T>) -> R) -> R;
 
     /// returns a Key of the fetcht value of the state
     /// Cached State will try to update their Value

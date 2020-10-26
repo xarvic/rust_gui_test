@@ -1,7 +1,7 @@
 use crate::widgets::Widget;
 use druid_shell::kurbo::{Rect, Size};
 use crate::widget_graph::WidgetContext;
-use crate::event::{Event, EventResponse};
+use crate::event::{Event, EventResponse, Change};
 use druid_shell::piet::{Piet, RenderContext, PietTextLayout, FontBuilder, Text, TextLayout, Color, TextLayoutBuilder, PietText, PietFont};
 use crate::state::key::Key;
 use crate::size::PrefSize;
@@ -70,6 +70,10 @@ impl<T: Clone> Widget<T> for Label {
     fn build(&mut self, context: WidgetContext) {
 
     }
+
+    fn update(&mut self, new: &T, old: Option<&T>) -> Change {
+        Change::None
+    }
 }
 
 pub struct DynLabel<T, F> {
@@ -96,11 +100,7 @@ impl<T: Clone, F: Fn(&T) -> String> Widget<T> for DynLabel<T, F> {
     }
 
     fn handle_event(&mut self, event: Event, context: WidgetContext, data: Key<T>) -> EventResponse {
-        //TODO: move this to update
-        *self.label.set_text() = (self.update)(&*data);
-        self.label.recalc_text();
-
-        EventResponse::bounds_changed(false)
+        EventResponse::NONE
     }
 
     fn get_pref_size(&mut self, context: WidgetContext, data: &T) -> PrefSize {
@@ -115,4 +115,10 @@ impl<T: Clone, F: Fn(&T) -> String> Widget<T> for DynLabel<T, F> {
     }
 
     fn build(&mut self, context: WidgetContext) {}
+
+    fn update(&mut self, new: &T, old: Option<&T>) -> Change {
+        *self.label.set_text() = (self.update)(new);
+        self.label.recalc_text();
+        Change::Bounds
+    }
 }

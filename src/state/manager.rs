@@ -21,7 +21,6 @@ static LISTENER: Lazy<SyncSender<Action>> = Lazy::new(||{
                 Action::StateUpdate(state_id) => {
                     for (notify, states, _) in data.iter() {
                         states.send(state_id).unwrap();
-                        println!("handle state update!");
                         if let Some(notify) = notify {
                             notify();
                         }

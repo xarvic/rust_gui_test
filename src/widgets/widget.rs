@@ -1,7 +1,7 @@
 use druid_shell::piet::{Piet, Color};
 use druid_shell::kurbo::{Size, Rect};
 use crate::widget_graph::WidgetContext;
-use crate::event::{Event, EventResponse};
+use crate::event::{Event, EventResponse, Change};
 use crate::size::PrefSize;
 use crate::state::key::Key;
 use crate::widgets::raw::{Wrapper, WrapperWidget, PrefSizeWrapper, Padding};
@@ -17,6 +17,8 @@ pub trait Widget<T: Clone> {
     fn layout(&mut self, size: Size, context: WidgetContext, data: &T);
 
     fn build(&mut self, context: WidgetContext);
+
+    fn update(&mut self, new: &T, old: Option<&T>) -> Change;
 
     #[allow(unused_variables)]
     fn traverse_focus(&mut self, context: WidgetContext) -> bool {false}

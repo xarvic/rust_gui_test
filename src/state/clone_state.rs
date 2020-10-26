@@ -34,7 +34,7 @@ impl<T: 'static + Clone + Send + Sync> State<T> for CloneState<T> {
         operation(&self.cache)
     }
 
-    fn with_fetched_value<R>(&mut self, operation: impl FnOnce(&T) -> R) -> R {
+    fn with_fetched_value<R>(&mut self, operation: impl FnOnce(&T, Option<&T>) -> R) -> R {
         let new_commit = self.inner.commit.load(Ordering::Acquire);
         if new_commit > self.commit {
             self.commit = new_commit;
@@ -42,7 +42,7 @@ impl<T: 'static + Clone + Send + Sync> State<T> for CloneState<T> {
             let CloneState{inner, cache, commit} = self;
             inner.use_value(|value|cache.clone_from(value))
         }
-        operation(&self.cache)
+        operation(&self.cache, None)//TODO: change
     }
 
     fn with_key<R>(&mut self, operation: impl FnOnce(Key<T>) -> R) -> R {
@@ -56,7 +56,6 @@ impl<T: 'static + Clone + Send + Sync> State<T> for CloneState<T> {
         let r = operation(Key::new(&mut self.cache, &mut change));
 
         if change {
-            println!("update state!");
             let (_, commit) = self.inner.update_value(|value| {
                 value.clone_from(&self.cache)
             });

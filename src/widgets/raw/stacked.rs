@@ -1,6 +1,6 @@
 use crate::widgets::Widget;
 use druid_shell::kurbo::{Rect, Size};
-use crate::event::{EventResponse, Event};
+use crate::event::{EventResponse, Event, Change};
 use crate::widget_graph::WidgetContext;
 use druid_shell::piet::{Piet, RenderContext};
 use crate::state::key::Key;
@@ -58,6 +58,10 @@ impl<T: Clone, A: Widget<T>, B: Widget<T>> Widget<T> for Stacked<A, B> {
     fn build(&mut self, mut context: WidgetContext) {
         self.widget_top.build(context.id());
         self.widget_bottom.build(context.id());
+    }
+
+    fn update(&mut self, new: &T, old: Option<&T>) -> Change {
+        self.widget_top.update(new, old).merge(self.widget_bottom.update(new, old))
     }
 
     fn traverse_focus(&mut self, mut context: WidgetContext) -> bool {

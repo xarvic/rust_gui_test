@@ -1,5 +1,5 @@
 use crate::widgets::Widget;
-use crate::event::{Event, EventResponse};
+use crate::event::{Event, EventResponse, Change};
 use crate::widget_graph::WidgetContext;
 use crate::state::key::Key;
 use druid_shell::kurbo::{Rect, Size};
@@ -26,6 +26,10 @@ impl<T: Clone, W: Widget<T>, F: FnMut(Event, &mut W, WidgetContext, Key<T>) -> E
 
     fn build(&mut self, context: WidgetContext) {
         self.0.build(context)
+    }
+
+    fn update(&mut self, new: &T, old: Option<&T>) -> Change {
+        self.0.update(new, old)
     }
 
     fn traverse_focus(&mut self, context: WidgetContext) -> bool {

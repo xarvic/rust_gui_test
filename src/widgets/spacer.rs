@@ -1,6 +1,6 @@
 use crate::widgets::Widget;
 use druid_shell::kurbo::{Rect, Size};
-use crate::event::{EventResponse, Event};
+use crate::event::{EventResponse, Event, Change};
 use crate::widget_graph::WidgetContext;
 use crate::size::PrefSize;
 use druid_shell::piet::Piet;
@@ -34,4 +34,8 @@ impl<T: Clone> Widget<T> for Spacer{
     fn layout(&mut self, size: Size, context: WidgetContext, data: &T) {}
 
     fn build(&mut self, context: WidgetContext) {}
+
+    fn update(&mut self, new: &T, old: Option<&T>) -> Change {
+        Change::None
+    }
 }

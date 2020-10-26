@@ -1,6 +1,6 @@
 use druid_shell::piet::{Piet, RenderContext};
 use druid_shell::kurbo::{Size, Rect, Affine};
-use crate::event::{Event, EventResponse};
+use crate::event::{Event, EventResponse, Change};
 use crate::widgets::Widget;
 use crate::widget_graph::WidgetContext;
 use crate::state::key::Key;
@@ -139,6 +139,11 @@ impl<T: Clone, U: Wrapper, W: Widget<T>> Widget<T> for WrapperWidget<U, W> {
     fn build(&mut self, context: WidgetContext) {
         self.wrapped_widget.build(context)
     }
+
+    fn update(&mut self, new: &T, old: Option<&T>) -> Change {
+        self.wrapped_widget.update(new, old)
+    }
+
     fn traverse_focus(&mut self, context: WidgetContext) -> bool {
         self.wrapped_widget.traverse_focus(context)
     }

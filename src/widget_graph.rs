@@ -17,6 +17,8 @@ pub struct StateRoot {
     position: Point,
     size: Size,
     last_update: u64,
+    pref_size: PrefSize,
+    re_layout: bool,
 }
 
 impl StateRoot {
@@ -26,6 +28,8 @@ impl StateRoot {
             position: Point::ZERO,
             size: Size::ZERO,
             last_update: 0,
+            pref_size: PrefSize::zero(),
+            re_layout: true,
         }
     }
 
@@ -35,15 +39,25 @@ impl StateRoot {
     }
     pub fn handle_event(mut self: ChildUniq<Self>, event: Event, env: Env) -> EventResponse {
         let (this, childs) = self.get_both_unique();
-        this.widgets.handle_event(event, WidgetContext::new(childs, env))
+        let response = this.widgets.handle_event(event, WidgetContext::new(childs, env));
+        self.re_layout |= response.change().bounds_changed();
+        response
     }
     pub fn get_pref_size(mut self: ChildUniq<Self>, env: Env) -> PrefSize {
-        let (this, childs) = self.get_both_unique();
-        this.widgets.get_pref_size(WidgetContext::new(childs, env))
+        if self.re_layout {
+            let (this, childs) = self.get_both_unique();
+            let pref = this.widgets.get_pref_size(WidgetContext::new(childs, env));
+            self.pref_size = pref;
+        }
+        self.pref_size
     }
     pub fn layout(mut self: ChildUniq<Self>, size: Size, env: Env) {
-        let (this, childs) = self.get_both_unique();
-        this.widgets.layout(size, WidgetContext::new(childs, env))
+        if self.re_layout || self.size != size {
+            self.size = size;
+            let (this, childs) = self.get_both_unique();
+            this.widgets.layout(size, WidgetContext::new(childs, env));
+            self.re_layout = false;
+        }
     }
     pub fn traverse_focus(mut self: ChildUniq<Self>, env: Env) -> bool {
         let (this, childs) = self.get_both_unique();
@@ -56,8 +70,22 @@ impl StateRoot {
     pub fn states<'a>(self: Ref<'a, Self>) -> StateID {
         self.widgets.states()
     }
-    pub fn update(self: RefUniq<Self>) {
-        //TODO: implement
+    pub fn update(mut self: RefUniq<Self>) -> Change {
+
+        fn bounds_changed(mut node: RefUniq<StateRoot>) {
+            node.re_layout = true;
+            if let Ok(node) = node.into_parent() {
+                bounds_changed(node);
+            }
+        }
+
+        let offset = self.position.to_vec2();
+
+        let change = self.widgets.update();
+        if change.bounds_changed() {
+            bounds_changed(self);
+        }
+        change.shift(offset)
     }
 }
 
@@ -139,15 +167,26 @@ impl WidgetGraph {
     }
 
     pub fn update(&mut self, states: &[StateID]) {
-        for state in states {
+        let mut change = Change::None;
 
+        for state in states {
+            for node in self.dependent_nodes.get(state).unwrap_or(&Vec::new()) {
+                if let Some(node) = self.tree.get_index_mut(*node) {
+                    change = change.merge(node.update());
+                }
+            }
         }
+
+        self.apply_change(change);
     }
     pub fn handle_event(&mut self, event: Event) {
 
         let response = self.tree.mut_top().inner().handle_event(event, Env::new(&mut self.dependent_nodes));
 
-        match response.change() {
+        self.apply_change(response.change())
+    }
+    fn apply_change(&mut self, change: Change) {
+        match change {
             Change::None => {}
             Change::Content(rect) => {
                 self.dirty_rect = Some(self.dirty_rect.map_or(rect, |old|old.union(rect)));

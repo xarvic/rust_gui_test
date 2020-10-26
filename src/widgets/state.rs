@@ -1,5 +1,5 @@
 use crate::state::{StateID, CloneState, State};
-use crate::event::{Event, EventResponse};
+use crate::event::{Event, EventResponse, Change};
 use druid_shell::piet::Piet;
 use crate::widgets::widget::Widget;
 use druid_shell::kurbo::{Size, Rect};
@@ -11,7 +11,7 @@ use std::mem::replace;
 
 ///
 pub trait StateWidget {
-    fn update(&mut self) -> bool;
+    fn update(&mut self) -> Change;
     fn draw(&mut self, painter: &mut Piet, size: Size, dirty_rect: Rect, context: WidgetContext);
     fn handle_event(&mut self, event: Event, context: WidgetContext) -> EventResponse;
     fn get_pref_size(&mut self, context: WidgetContext) -> PrefSize;
@@ -66,6 +66,11 @@ impl<T: Clone> Widget<T> for StateWrapper {
         self.as_child(context, move|child, env|child.build(env))
     }
 
+    fn update(&mut self, new: &T, old: Option<&T>) -> Change {
+        //The wrapped state will get its own update if its state changed!
+        Change::None
+    }
+
     fn traverse_focus(&mut self, context: WidgetContext) -> bool {
         self.as_child(context, move|child, env|child.traverse_focus(env))
     }
@@ -97,8 +102,9 @@ impl<T: Clone + Send + Sync + 'static, W: Widget<T>> StateWidgetImpl<T, W> {
 }
 
 impl<T: Clone + Send + Sync + 'static, W: Widget<T>> StateWidget for StateWidgetImpl<T, W> {
-    fn update(&mut self) -> bool {
-        unimplemented!()
+    fn update(&mut self) -> Change {
+        let widget = &mut self.widget;
+        self.state.with_fetched_value(|new, old|widget.update(new, old))
     }
 
     fn draw(&mut self, painter: &mut Piet, size: Size, dirty_rect: Rect, context: WidgetContext) {
