@@ -1,11 +1,11 @@
 use crate::widgets::Widget;
-use crate::event::{Event, EventResponse, Change};
-use crate::widget_graph::WidgetContext;
 use crate::state::key::Key;
 use druid_shell::kurbo::{Rect, Size};
 use druid_shell::piet::Piet;
-use crate::size::PrefSize;
 use druid_shell::MouseEvent;
+use crate::app::event::{Event, EventResponse, Change};
+use crate::app::widget_graph::WidgetContext;
+use crate::app::size::PrefSize;
 
 impl<T: Clone, W: Widget<T>, F: FnMut(Event, &mut W, WidgetContext, Key<T>) -> EventResponse> Widget<T> for EventModifier<W, F> {
     fn draw(&mut self, painter: &mut Piet, size: Size, dirty_rect: Rect, context: WidgetContext, data: &T) {

@@ -2,9 +2,9 @@ use crate::widgets::style::Style;
 use std::sync::Arc;
 use crate::widgets::raw::{Wrapper, WrapperResponse};
 use druid_shell::kurbo::{Rect, Size};
-use crate::event::Event;
 use druid_shell::piet::Piet;
 use ccl_owning_ref::OwningRef;
+use crate::app::event::Event;
 
 #[derive(Copy, Clone, Eq, PartialEq, Debug)]
 enum Sheet{

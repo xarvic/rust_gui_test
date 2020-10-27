@@ -1,6 +1,6 @@
-use crate::size::PrefSize;
 use crate::widgets::layout::{Spacing, Layout, WidgetList};
 use druid_shell::kurbo::{Size, Vec2};
+use crate::app::size::PrefSize;
 
 pub struct HBox{
     inner: PrefSize,

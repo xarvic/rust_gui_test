@@ -1,10 +1,10 @@
 use crate::widgets::Widget;
 use druid_shell::kurbo::{Rect, Size};
-use crate::event::{EventResponse, Event, Change};
-use crate::widget_graph::WidgetContext;
 use druid_shell::piet::{Piet, RenderContext};
 use crate::state::key::Key;
-use crate::size::PrefSize;
+use crate::app::event::{Event, EventResponse, Change};
+use crate::app::widget_graph::WidgetContext;
+use crate::app::size::PrefSize;
 
 #[derive(Eq, PartialEq, Copy, Clone)]
 pub enum AB {

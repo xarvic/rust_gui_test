@@ -1,16 +1,15 @@
-use std::collections::HashMap;
-use crate::state::{StateID, CloneState};
+use crate::widgets::{StateWidget, Widget, StateWidgetImpl};
 use druid_shell::kurbo::{Point, Size, Rect};
-use crate::event::{Event, Change, EventResponse};
+use crate::app::size::PrefSize;
+use pool_tree::child_unique::ChildUniq;
 use druid_shell::piet::Piet;
-use crate::widgets::{Widget, StateWidget, StateWidgetImpl};
-use crate::size::PrefSize;
+use crate::app::event::{EventResponse, Event, Change};
+use pool_tree::reference::{Ref, TreeRef};
+use crate::state::{StateID, CloneState};
+use pool_tree::ref_unique::RefUniq;
+use std::collections::HashMap;
 use pool_tree::children_unique::ChildrenUnique;
 use pool_tree::tree::Tree;
-use pool_tree::child_unique::ChildUniq;
-use pool_tree::ref_unique::RefUniq;
-use pool_tree::reference::Ref;
-use pool_tree::reference::TreeRef;
 
 pub struct StateRoot {
     widgets: Box<dyn StateWidget>,
@@ -139,7 +138,7 @@ impl<'a> WidgetContext<'a> {
         {
             let nodes = &mut self.env.dependent_nodes;
             let state = child.get_ref().states();
-            nodes.entry(state).or_default().push(child.get_ref().index());
+            nodes.entry(state).or_default().push(child.index());
         }
         (child, self.env.id(), index)
     }

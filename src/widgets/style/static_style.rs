@@ -2,7 +2,7 @@ use crate::widgets::raw::{Wrapper, WrapperResponse};
 use crate::widgets::style::Style;
 use druid_shell::piet::Piet;
 use druid_shell::kurbo::{Size, Rect};
-use crate::event::Event;
+use crate::app::event::Event;
 
 pub struct StaticStyle(Style);
 

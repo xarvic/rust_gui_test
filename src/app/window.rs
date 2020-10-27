@@ -1,13 +1,13 @@
-use druid_shell::{WinHandler, WindowHandle, MouseEvent, Application, IdleToken, KeyEvent, KeyCode};
-use druid_shell::piet::Piet;
-use std::any::Any;
-use druid_shell::kurbo::{Size, Rect};
-use crate::widget_graph::WidgetGraph;
+use crate::app::widget_graph::WidgetGraph;
+use druid_shell::{WindowHandle, WinHandler, IdleToken, MouseEvent, KeyEvent, KeyCode, Application};
 use crate::state::{StateID, register_listener};
-use crate::event::Event;
+use druid_shell::kurbo::{Size, Rect};
 use std::sync::mpsc::Receiver;
 use crate::widgets::Widget;
-use crate::size::PrefSize;
+use crate::app::event::Event;
+use crate::app::size::PrefSize;
+use druid_shell::piet::Piet;
+use std::any::Any;
 
 struct Window{
     widgets: WidgetGraph,

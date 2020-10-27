@@ -1,7 +1,6 @@
 use crate::state::{Handle, HandleInner, StateInner, StateID, State};
 use std::sync::Arc;
 use crate::state::key::Key;
-use std::sync::atomic::Ordering;
 
 #[derive(Clone)]
 pub struct CloneState<T: Clone> {
@@ -27,7 +26,7 @@ impl<T: 'static + Clone + Send + Sync> CloneState<T> {
 
 impl<T: 'static + Clone + Send + Sync> State<T> for CloneState<T> {
     fn get_id(&self) -> StateID {
-        self.inner.id
+        self.inner.id()
     }
 
     fn with_value<R>(&self, operation: impl FnOnce(&T) -> R) -> R {
@@ -35,7 +34,7 @@ impl<T: 'static + Clone + Send + Sync> State<T> for CloneState<T> {
     }
 
     fn with_fetched_value<R>(&mut self, operation: impl FnOnce(&T, Option<&T>) -> R) -> R {
-        let new_commit = self.inner.commit.load(Ordering::Acquire);
+        let new_commit = self.inner.commit();
         if new_commit > self.commit {
             self.commit = new_commit;
 
@@ -46,7 +45,7 @@ impl<T: 'static + Clone + Send + Sync> State<T> for CloneState<T> {
     }
 
     fn with_key<R>(&mut self, operation: impl FnOnce(Key<T>) -> R) -> R {
-        let new_commit = self.inner.commit.load(Ordering::Acquire);
+        let new_commit = self.inner.commit();
         if new_commit > self.commit {
             self.commit = new_commit;
             let CloneState{inner, cache, commit} = self;

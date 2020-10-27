@@ -1,10 +1,10 @@
 use crate::widgets::Widget;
 use druid_shell::kurbo::{Rect, Size};
-use crate::event::{EventResponse, Event, Change};
-use crate::widget_graph::WidgetContext;
-use crate::size::PrefSize;
 use druid_shell::piet::Piet;
 use crate::state::key::Key;
+use crate::app::size::PrefSize;
+use crate::app::widget_graph::WidgetContext;
+use crate::app::event::{EventResponse, Event, Change};
 
 #[derive(Copy, Clone)]
 pub struct Spacer(PrefSize);

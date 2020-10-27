@@ -1,11 +1,11 @@
 use druid_shell::piet::{Piet, Color};
 use druid_shell::kurbo::{Size, Rect};
-use crate::widget_graph::WidgetContext;
-use crate::event::{Event, EventResponse, Change};
-use crate::size::PrefSize;
 use crate::state::key::Key;
 use crate::widgets::raw::{Wrapper, WrapperWidget, PrefSizeWrapper, Padding};
 use crate::widgets::style::{BackgroundWrapper, background};
+use crate::app::widget_graph::WidgetContext;
+use crate::app::event::{EventResponse, Event, Change};
+use crate::app::size::PrefSize;
 
 pub trait Widget<T: Clone> {
     fn draw(&mut self, painter: &mut Piet, size: Size, dirty_rect: Rect, context: WidgetContext, data: &T);

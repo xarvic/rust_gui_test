@@ -1,9 +1,4 @@
-use gui::state::CloneState;
-use gui::window::WindowBuilder;
-use gui::widgets::layout::{Container, Spacing, VBox};
-use gui::widgets::text::{DynLabel, TextInput};
-use gui::widgets::*;
-use druid_shell::piet::Color;
+use gui::prelude::*;
 
 fn main() {
     let text = CloneState::new(String::from("Test"));

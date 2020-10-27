@@ -1,11 +1,11 @@
 use crate::widgets::layout::{WidgetList, ChildMeta, Layout};
 use crate::widgets::Widget;
-use crate::event::{Event, EventResponse, Change};
-use crate::widget_graph::WidgetContext;
 use crate::state::key::Key;
 use druid_shell::kurbo::{Size, Affine, Rect};
 use druid_shell::piet::{Piet, RenderContext};
-use crate::size::PrefSize;
+use crate::app::widget_graph::WidgetContext;
+use crate::app::event::{Event, EventResponse, Change};
+use crate::app::size::PrefSize;
 
 type List<T, Meta> = Vec<(Box<dyn Widget<T>>, ChildMeta<Meta>)>;
 
@@ -80,7 +80,7 @@ impl<T: Clone + 'static, L: Layout> Widget<T> for Container<T, L> {
         }
     }
 
-    fn handle_event(&mut self, mut event: Event, mut context: WidgetContext, mut data: Key<T>) -> EventResponse{
+    fn handle_event(&mut self, mut event: Event, mut context: WidgetContext, mut data: Key<T>) -> EventResponse {
         let mut response = EventResponse::NONE;
 
         if let Some(me) = event.mouse_event() {

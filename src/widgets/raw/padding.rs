@@ -1,7 +1,7 @@
 use druid_shell::kurbo::{Size, Rect};
 use crate::widgets::raw::{Wrapper, WrapperResponse};
-use crate::event::Event;
 use druid_shell::piet::Piet;
+use crate::app::event::Event;
 
 pub struct Padding(Size, Size);
 

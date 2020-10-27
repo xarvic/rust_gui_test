@@ -8,7 +8,7 @@ pub use vbox::VBox;
 pub use container::Container;
 
 use druid_shell::kurbo::{Vec2, Size};
-use crate::size::PrefSize;
+use crate::app::size::PrefSize;
 
 pub struct ChildMeta<Meta> {
     pub meta: Meta,

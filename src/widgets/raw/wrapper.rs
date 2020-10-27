@@ -1,10 +1,10 @@
 use druid_shell::piet::{Piet, RenderContext};
 use druid_shell::kurbo::{Size, Rect, Affine};
-use crate::event::{Event, EventResponse, Change};
 use crate::widgets::Widget;
-use crate::widget_graph::WidgetContext;
 use crate::state::key::Key;
-use crate::size::PrefSize;
+use crate::app::event::{EventResponse, Event, Change};
+use crate::app::widget_graph::WidgetContext;
+use crate::app::size::PrefSize;
 
 pub enum WrapperResponse {
     Unchanged,

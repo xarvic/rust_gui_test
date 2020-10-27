@@ -2,15 +2,15 @@ mod input;
 
 use crate::widgets::Widget;
 use druid_shell::kurbo::{Rect, Size};
-use crate::widget_graph::WidgetContext;
-use crate::event::{Event, EventResponse, Change};
 use druid_shell::piet::{Piet, RenderContext, PietTextLayout, FontBuilder, Text, TextLayout, Color, TextLayoutBuilder, PietText, PietFont};
 use crate::state::key::Key;
-use crate::size::PrefSize;
 use crate::widgets::widget::IntoWidget;
 use std::marker::PhantomData;
 
 pub use input::TextInput;
+use crate::app::widget_graph::WidgetContext;
+use crate::app::event::{EventResponse, Event, Change};
+use crate::app::size::PrefSize;
 
 impl<T: Clone> IntoWidget<T> for String {
     type Widget = Label;
@@ -59,7 +59,7 @@ impl<T: Clone> Widget<T> for Label {
         painter.draw_text(&self.layout, (4.0, 13.0), &brush);
     }
 
-    fn handle_event(&mut self, event: Event, context: WidgetContext, data: Key<T>) -> EventResponse{
+    fn handle_event(&mut self, event: Event, context: WidgetContext, data: Key<T>) -> EventResponse {
         EventResponse::NONE
     }
 
