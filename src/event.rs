@@ -1,13 +1,19 @@
-use druid_shell::MouseEvent;
+use druid_shell::{MouseEvent, KeyEvent};
 use druid_shell::kurbo::{Vec2, Rect, Size};
 
-#[derive(Clone, PartialEq)]
+#[derive(Clone)]
 pub enum Event{
+    //Mouse Events
     MouseEnter(MouseEvent),
     MouseMove(MouseEvent),
     MouseDown(MouseEvent),
     MouseUp(MouseEvent),
     MouseExit,
+
+    //Keyboard
+    KeyDown(KeyEvent),
+    KeyUp(KeyEvent),
+
 }
 
 impl Event {

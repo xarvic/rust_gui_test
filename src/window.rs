@@ -1,4 +1,4 @@
-use druid_shell::{WinHandler, WindowHandle, MouseEvent, Application, IdleToken};
+use druid_shell::{WinHandler, WindowHandle, MouseEvent, Application, IdleToken, KeyEvent, KeyCode};
 use druid_shell::piet::Piet;
 use std::any::Any;
 use druid_shell::kurbo::{Size, Rect};
@@ -48,10 +48,11 @@ impl Window {
         }
     }
 
-    fn handle_event(&mut self, event: Event) {
-        self.widgets.handle_event(event);
+    fn handle_event(&mut self, event: Event) -> bool {
+        let response = self.widgets.handle_event(event);
 
         self.update_states();
+        response.is_consumed()
     }
     fn widgets_pref_size(&mut self) -> PrefSize {
         self.widgets.pref_size()
@@ -118,6 +119,21 @@ impl WinHandler for Window {
             self.mouse_focus = false;
         }
     }
+
+    fn key_down(&mut self, event: KeyEvent) -> bool {
+        //TODO: change, this is only temporary
+        if event.key_code == KeyCode::Tab {
+            self.widgets.traverse_focus();
+            self.update_states();
+            return true;
+        }
+        self.handle_event(Event::KeyDown(event.clone()))
+    }
+
+    fn key_up(&mut self, event: KeyEvent) {
+        self.handle_event(Event::KeyUp(event.clone()));
+    }
+
     fn idle(&mut self, token: IdleToken) {
         self.update_states()
     }

@@ -23,14 +23,19 @@ pub struct StateRoot {
 
 impl StateRoot {
     pub fn new(state: Box<dyn StateWidget>) -> Self {
-        StateRoot {
+        let mut state_root = StateRoot {
             widgets: state,
             position: Point::ZERO,
             size: Size::ZERO,
             last_update: 0,
             pref_size: PrefSize::zero(),
             re_layout: true,
-        }
+        };
+        //TODO: move this to the appropriate position
+        //For now this ensures, that every Widget is update at its inserting in the widget-tree
+        state_root.widgets.update();
+
+        state_root
     }
 
     pub fn draw(mut self: ChildUniq<Self>, piet: &mut Piet, size: Size, dirty_rect: Rect, env: Env) {
@@ -70,6 +75,7 @@ impl StateRoot {
     pub fn states<'a>(self: Ref<'a, Self>) -> StateID {
         self.widgets.states()
     }
+
     pub fn update(mut self: RefUniq<Self>) -> Change {
 
         fn bounds_changed(mut node: RefUniq<StateRoot>) {
@@ -156,14 +162,19 @@ impl WidgetGraph {
 
         let widget = StateWidgetImpl::new(CloneState::new(()), root);
 
-        WidgetGraph {
+        let mut graph = WidgetGraph {
             tree: Tree::new(StateRoot::new(Box::new(widget))),
             dependent_nodes: HashMap::new(),
             dirty_rect: None,
             size: Size::ZERO,
             pref_size: PrefSize::zero(),
             re_layout: true,
-        }
+        };
+
+        //focus the first!
+        graph.traverse_focus();
+
+        graph
     }
 
     pub fn update(&mut self, states: &[StateID]) {
@@ -179,11 +190,12 @@ impl WidgetGraph {
 
         self.apply_change(change);
     }
-    pub fn handle_event(&mut self, event: Event) {
+    pub fn handle_event(&mut self, event: Event) -> EventResponse {
 
         let response = self.tree.mut_top().inner().handle_event(event, Env::new(&mut self.dependent_nodes));
 
-        self.apply_change(response.change())
+        self.apply_change(response.change());
+        response
     }
     fn apply_change(&mut self, change: Change) {
         match change {
@@ -230,5 +242,15 @@ impl WidgetGraph {
 
         self.tree.mut_top().inner().draw(piet, size, dirty_rect, Env::new(&mut self.dependent_nodes));
         false
+    }
+    pub fn traverse_focus(&mut self) {
+        //Traversing the focus through the Tree
+        let focus = self.tree.mut_top().inner().traverse_focus(Env::new(&mut self.dependent_nodes));
+
+        //If returned false the last widget traversed the focus => beginn at the start!
+        if !focus {
+            self.tree.mut_top().inner().traverse_focus(Env::new(&mut self.dependent_nodes));
+        }
+        //Dont try again, if the top-widget returns false again, the graph contains no focusable Widgets!
     }
 }

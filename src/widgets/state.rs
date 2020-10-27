@@ -76,11 +76,11 @@ impl<T: Clone> Widget<T> for StateWrapper {
     }
 }
 
-pub fn state<T: Clone + Send + Sync + 'static>(state: CloneState<T>, widget: impl Widget<T> + 'static) -> StateWrapper {
+pub fn state<T: Clone + Send + Sync + 'static>(state: &CloneState<T>, widget: impl Widget<T> + 'static) -> StateWrapper {
     StateWrapper::Local(
         Box::new(
             StateWidgetImpl {
-                state,
+                state: state.clone(),
                 widget,
             }
         )

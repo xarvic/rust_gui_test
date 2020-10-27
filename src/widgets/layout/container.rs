@@ -116,8 +116,8 @@ impl<T: Clone + 'static, L: Layout> Widget<T> for Container<T, L> {
                 }
             }
             self.mouse_focus = consumer;
-        } else {
-
+        } else if let Some(id) = self.focus {
+            response = response.merge(self.widgets[id as usize].0.handle_event(event, context, data));
         }
 
         response

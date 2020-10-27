@@ -1,3 +1,5 @@
+mod input;
+
 use crate::widgets::Widget;
 use druid_shell::kurbo::{Rect, Size};
 use crate::widget_graph::WidgetContext;
@@ -7,6 +9,8 @@ use crate::state::key::Key;
 use crate::size::PrefSize;
 use crate::widgets::widget::IntoWidget;
 use std::marker::PhantomData;
+
+pub use input::TextInput;
 
 impl<T: Clone> IntoWidget<T> for String {
     type Widget = Label;
@@ -104,9 +108,6 @@ impl<T: Clone, F: Fn(&T) -> String> Widget<T> for DynLabel<T, F> {
     }
 
     fn get_pref_size(&mut self, context: WidgetContext, data: &T) -> PrefSize {
-        *self.label.set_text() = (self.update)(data);
-        self.label.recalc_text();
-
         self.label.get_pref_size(context, data)
     }
 
