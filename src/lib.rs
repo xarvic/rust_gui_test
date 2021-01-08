@@ -1,6 +1,5 @@
 #![feature(const_fn)]
-#![allow(unused_variables)]
-#![allow(dead_code)]
+#![allow(unused_variables, unused_mut, dead_code, unused_variables)]
 
 pub use druid_shell;
 

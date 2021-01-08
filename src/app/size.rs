@@ -1,10 +1,15 @@
 use druid_shell::kurbo::{Size, Vec2};
 
-pub static GROW_IF_NEEDED: f64 = 0.0000001;
+pub static GROW_IF_NEEDED: f64 = 0.00000001;
 pub static GROW_NORMAL: f64 = 1.0;
 pub static DONT_GROW: f64 = 0.0;
 
-///
+/// Represents the preferred size of a widget
+/// min  - min is the minimum size to display its content in a meaningful way
+/// max  - max is the size at which the widgets can display their content optimal
+/// grow - grow is a vector of two non-negative numbers. The value defines how much of the parents remaining
+///        space this widget receives.
+///        The default value for non-growing widgets is 0 and for growing 1.
 #[derive(Copy, Clone, PartialEq)]
 pub struct PrefSize {
     pub(crate) min: Size,
@@ -51,6 +56,12 @@ impl PrefSize {
     pub fn grow_if_needed(mut self) -> Self {
         self.grow_needed_y();
         self.grow_needed_x();
+        self
+    }
+
+    pub fn dont_grow(mut self) -> Self {
+        self.dont_grow_x();
+        self.dont_grow_y();
         self
     }
 

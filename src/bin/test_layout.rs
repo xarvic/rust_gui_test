@@ -63,7 +63,7 @@ impl Widget<()> for ColorRect {
 
     fn build(&mut self, _context: WidgetContext) {}
 
-    fn update(&mut self, new: &(), old: Option<&()>) -> Change {
+    fn update(&mut self, _new: &(), _old: Option<&()>) -> Change {
         Change::None
     }
 }
